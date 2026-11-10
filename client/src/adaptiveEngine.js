@@ -1,9 +1,4 @@
-
-export function calculateNextDifficulty(
-  correctAnswers,
-  totalQuestions,
-  currentLevel
-) {
+export function calculateNextDifficulty(correctAnswers, totalQuestions, currentLevel) {
   if (totalQuestions <= 0) {
     return {
       level: "Beginner",
@@ -39,7 +34,7 @@ export function calculateNextDifficulty(
     };
   }
 
- // Intermediate level
+  // Intermediate level
   if (currentLevel === "Intermediate") {
     if (accuracy >= 80) {
       return {

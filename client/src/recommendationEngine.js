@@ -13,9 +13,7 @@ export function generateRecommendations(topicResults) {
   return topicResults
     .map((result) => {
       const percentage =
-        result.total > 0
-          ? Math.round((result.correct / result.total) * 100)
-          : 0;
+        result.total > 0 ? Math.round((result.correct / result.total) * 100) : 0;
 
       let priority;
       let message;

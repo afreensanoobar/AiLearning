@@ -6,9 +6,7 @@ export function generateLearningPath(topicPerformance) {
   const learningPath = topicPerformance
     .filter((topic) => topic.total > 0)
     .map((topic) => {
-      const percentage = Math.round(
-        (topic.correct / topic.total) * 100
-      );
+      const percentage = Math.round((topic.correct / topic.total) * 100);
 
       let priority;
       let action;

@@ -7,10 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build
 node_modules
 dist
 dist-ssr
-*.local
+build
+coverage
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
 
 # Editor directories and files
 .vscode/*

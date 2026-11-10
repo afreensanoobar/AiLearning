@@ -1,10 +1,7 @@
-
-
 import { useState } from "react";
 import { Send, BrainCircuit, User, Sparkles, Trash2 } from "lucide-react";
 
 // Temporary educational response engine
-
 
 function generateTutorResponse(question, level = "Beginner") {
   const q = question.toLowerCase();
@@ -97,7 +94,7 @@ Advanced applications:
 4. Event handlers
 5. Module patterns
 
-Important: Closures retain references to variables, not simply frozen copies of their values.`
+Important: Closures retain references to variables, not simply frozen copies of their values.`,
     },
 
     usestate: {
@@ -163,7 +160,7 @@ Important concepts:
 2. Functional updates avoid stale state calculations.
 3. React may batch multiple updates.
 4. State is associated with a component's position in the render tree.
-5. Hooks must be called at the top level of React components or custom Hooks.`
+5. Hooks must be called at the top level of React components or custom Hooks.`,
     },
 
     flexbox: {
@@ -233,7 +230,7 @@ Advanced concepts:
 4. align-self overrides individual cross-axis alignment.
 5. flex-wrap allows items to move onto additional lines.
 
-Understanding the flex sizing algorithm helps build responsive interfaces without unnecessary fixed widths.`
+Understanding the flex sizing algorithm helps build responsive interfaces without unnecessary fixed widths.`,
     },
 
     semantic: {
@@ -290,7 +287,7 @@ Important considerations:
 
 Semantic HTML improves compatibility with screen readers, keyboard navigation and accessibility tools.
 
-It also makes document structure easier for developers and search engines to understand.`
+It also makes document structure easier for developers and search engines to understand.`,
     },
 
     javascript: {
@@ -363,7 +360,7 @@ async function fetchData() {
   }
 }
 
-Understanding asynchronous execution is essential for building complex applications.`
+Understanding asynchronous execution is essential for building complex applications.`,
     },
 
     react: {
@@ -426,8 +423,8 @@ const MemoizedComponent = React.memo(function Component({ value }) {
 
 React.memo can skip rendering when props have not changed, subject to its comparison behavior.
 
-Choose optimization techniques based on measured performance rather than using them everywhere.`
-    }
+Choose optimization techniques based on measured performance rather than using them everywhere.`,
+    },
   };
 
   let topic = null;
@@ -463,7 +460,6 @@ Learning Level: ${level}
 More flexible AI-generated answers will be added when backend integration is implemented.`;
 }
 
-
 function AITutor() {
   const [input, setInput] = useState("");
   const [learningLevel, setLearningLevel] = useState("Beginner");
@@ -472,15 +468,15 @@ function AITutor() {
     {
       role: "assistant",
       content:
-        "Hello! I'm your AI Tutor. Ask me anything about HTML, CSS, JavaScript, or React. I'll help you understand concepts step by step."
-    }
+        "Hello! I'm your AI Tutor. Ask me anything about HTML, CSS, JavaScript, or React. I'll help you understand concepts step by step.",
+    },
   ]);
 
   const suggestions = [
     "Explain JavaScript closures",
     "What is React useState?",
     "Explain CSS Flexbox",
-    "What are semantic HTML tags?"
+    "What are semantic HTML tags?",
   ];
 
   const handleSend = (text = input) => {
@@ -488,15 +484,12 @@ function AITutor() {
 
     if (!question) return;
 
-    const response = generateTutorResponse(
-  question,
-  learningLevel
-);
+    const response = generateTutorResponse(question, learningLevel);
 
     setMessages((previous) => [
       ...previous,
       { role: "user", content: question },
-      { role: "assistant", content: response }
+      { role: "assistant", content: response },
     ]);
 
     setInput("");
@@ -507,27 +500,20 @@ function AITutor() {
       {
         role: "assistant",
         content:
-          "Hello! I'm your AI Tutor. Ask me anything about HTML, CSS, JavaScript, or React."
-      }
+          "Hello! I'm your AI Tutor. Ask me anything about HTML, CSS, JavaScript, or React.",
+      },
     ]);
   };
 
   return (
     <div className="flex flex-col gap-5">
-
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">
-          AI Learning Assistant
-        </h2>
-        <p className="mt-1 text-slate-500">
-          Ask questions and learn at your own pace.
-        </p>
+        <h2 className="text-2xl font-bold text-slate-800">AI Learning Assistant</h2>
+        <p className="mt-1 text-slate-500">Ask questions and learn at your own pace.</p>
       </div>
 
       <section className="flex min-h-[550px] flex-col overflow-hidden rounded-2xl border bg-white">
-
         <div className="flex items-center justify-between border-b p-5">
-
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-violet-100 p-3">
               <BrainCircuit className="text-violet-600" size={24} />
@@ -536,17 +522,15 @@ function AITutor() {
             <div>
               <h3 className="font-bold">LearnAI Tutor</h3>
               <select
-  value={learningLevel}
-  onChange={(e) => setLearningLevel(e.target.value)}
-  className="mt-2 rounded-lg border p-2 text-sm"
->
-  <option value="Beginner">Beginner</option>
-  <option value="Intermediate">Intermediate</option>
-  <option value="Advanced">Advanced</option>
-</select>
-              <p className="text-xs text-emerald-600">
-                Learning assistant
-              </p>
+                value={learningLevel}
+                onChange={(e) => setLearningLevel(e.target.value)}
+                className="mt-2 rounded-lg border p-2 text-sm"
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+              <p className="text-xs text-emerald-600">Learning assistant</p>
             </div>
           </div>
 
@@ -557,18 +541,14 @@ function AITutor() {
             <Trash2 size={16} />
             Clear Chat
           </button>
-
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
-
           {messages.map((message, index) => (
             <div
               key={index}
               className={`flex gap-3 ${
-                message.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
+                message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
               {message.role === "assistant" && (
@@ -594,14 +574,10 @@ function AITutor() {
               )}
             </div>
           ))}
-
         </div>
 
         <div className="border-t p-5">
-
-          <p className="mb-3 text-xs font-semibold text-slate-500">
-            TRY ASKING
-          </p>
+          <p className="mb-3 text-xs font-semibold text-slate-500">TRY ASKING</p>
 
           <div className="mb-4 flex flex-wrap gap-2">
             {suggestions.map((suggestion) => (
@@ -637,7 +613,6 @@ function AITutor() {
               <Send size={19} />
             </button>
           </form>
-
         </div>
       </section>
     </div>

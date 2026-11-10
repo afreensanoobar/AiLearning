@@ -1,16 +1,104 @@
-# React + Vite
+# LearnAI – Personalized Adaptive Learning Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A college project built with **React + Vite + Tailwind CSS** that provides an adaptive, personalized learning experience for web development students.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Adaptive Assessments** – Quiz difficulty auto-adjusts (Beginner → Intermediate → Advanced) based on performance
+- **Advanced Challenges** – 3 unlockable challenge stages after mastering the Advanced level
+- **AI Tutor** – Interactive chatbot explaining HTML, CSS, JavaScript, and React concepts at your level
+- **My Courses** – Track lesson-by-lesson progress across 4 courses with live checkboxes
+- **My Progress** – Topic-wise performance charts, personalized learning path, and full assessment history
+- **AI Recommendations** – Personalized study suggestions based on weak topics
+- **Learning Streak** – Consecutive-day activity tracker
+- **Auth** – Client-side register/login system (demo purposes)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Topics Covered
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Course            | Lessons   |
+| ----------------- | --------- |
+| HTML Fundamentals | 5 lessons |
+| CSS Fundamentals  | 5 lessons |
+| JavaScript        | 5 lessons |
+| React Development | 5 lessons |
+
+---
+
+## Tech Stack
+
+| Technology           | Purpose                 |
+| -------------------- | ----------------------- |
+| React 19             | UI framework            |
+| Vite 8               | Build tool & dev server |
+| Tailwind CSS 4       | Styling                 |
+| Lucide React         | Icons                   |
+| Browser localStorage | All state persistence   |
+
+---
+
+## Getting Started
+
+```bash
+# Clone the repo
+git clone https://github.com/Nuba743/CollegeProject.git
+cd CollegeProject
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+```
+
+Then open **http://localhost:5173** in your browser.
+
+**Other commands:**
+
+```bash
+npm run build    # Production build
+npm run preview  # Preview production build
+npm run lint     # Run ESLint
+```
+
+---
+
+## Project Structure
+
+```
+src/
+├── App.jsx                 # Root component — shell, navigation, all pages
+├── Auth.jsx                # Login / Register form
+├── Assessment.jsx          # Adaptive quiz engine
+├── AITutor.jsx             # Interactive chatbot tutor
+├── adaptiveEngine.js       # Difficulty level calculator
+├── learningPathEngine.js   # Personalized study path generator
+├── recommendationEngine.js # Topic recommendation engine
+└── advancedChallenges.js   # Advanced challenge question bank
+```
+
+---
+
+## How the Adaptive Engine Works
+
+```
+Score ≥ 80%  →  Promote to next level
+Score ≥ 50%  →  Stay at current level
+Score < 50%  →  Drop to previous level
+Score = 100% at Advanced  →  Mastery achieved → Unlock challenge stages
+```
+
+---
+
+## Notes
+
+- All data is stored in `localStorage` — no backend required
+- The AI Tutor uses a rule-based keyword engine (not a live AI API)
+- Passwords are stored in plain text — this is a demo project only
+
+---
+
+> Built as a college final project | 2026

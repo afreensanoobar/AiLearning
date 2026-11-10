@@ -1,4 +1,3 @@
-
 export const advancedChallenges = {
   1: [
     {
@@ -23,7 +22,8 @@ export const advancedChallenges = {
     {
       id: 103,
       topic: "CSS",
-      question: "Which CSS property creates a stacking context when set to a value other than auto on a positioned element?",
+      question:
+        "Which CSS property creates a stacking context when set to a value other than auto on a positioned element?",
       options: ["display", "z-index", "margin", "padding"],
       answer: 1,
     },

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BrainCircuit, Eye, EyeOff } from "lucide-react";
 
@@ -119,9 +118,7 @@ function Auth({ onLogin }) {
             />
           )}
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
