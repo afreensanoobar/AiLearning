@@ -54,14 +54,14 @@ npm install
 npm run dev
 ```
 
-Then open **http://localhost:5173** in your browser.
+Then open **http://localhost:5173** in your browser. The server workspace is an M0 placeholder; its API is added in M1.
 
 **Other commands:**
 
 ```bash
-npm run build    # Production build
-npm run preview  # Preview production build
-npm run lint     # Run ESLint
+npm run build                 # Build client and server
+npm run preview -w client     # Preview the production client
+npm run lint                  # Lint both workspaces
 ```
 
 ---
@@ -69,15 +69,19 @@ npm run lint     # Run ESLint
 ## Project Structure
 
 ```
-src/
-├── App.jsx                 # Root component — shell, navigation, all pages
-├── Auth.jsx                # Login / Register form
-├── Assessment.jsx          # Adaptive quiz engine
-├── AITutor.jsx             # Interactive chatbot tutor
-├── adaptiveEngine.js       # Difficulty level calculator
-├── learningPathEngine.js   # Personalized study path generator
-├── recommendationEngine.js # Topic recommendation engine
-└── advancedChallenges.js   # Advanced challenge question bank
+client/
+└── src/
+    ├── App.jsx                 # Root component — shell, navigation, all pages
+    ├── Auth.jsx                # Login / Register form
+    ├── Assessment.jsx          # Adaptive quiz engine
+    ├── AITutor.jsx             # Interactive chatbot tutor
+    ├── adaptiveEngine.js       # Difficulty level calculator
+    ├── learningPathEngine.js   # Personalized study path generator
+    ├── recommendationEngine.js # Topic recommendation engine
+    └── advancedChallenges.js   # Advanced challenge question bank
+server/
+└── src/
+    └── index.ts                # M0 backend placeholder
 ```
 
 ---
