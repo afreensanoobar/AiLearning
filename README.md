@@ -50,11 +50,14 @@ cd CollegeProject
 # Install dependencies
 npm install
 
+# Copy the example environment file and start MongoDB
+cp .env.example .env
+
 # Start the dev server
 npm run dev
 ```
 
-Then open **http://localhost:5173** in your browser. The server workspace is an M0 placeholder; its API is added in M1.
+Set `MONGODB_URI` in `.env` to a running MongoDB instance before starting the API. Then open **http://localhost:5173** in your browser. The API health check is available at **http://localhost:4000/api/health**.
 
 **Other commands:**
 
@@ -62,6 +65,7 @@ Then open **http://localhost:5173** in your browser. The server workspace is an 
 npm run build                 # Build client and server
 npm run preview -w client     # Preview the production client
 npm run lint                  # Lint both workspaces
+npm run test                  # Run workspace tests
 ```
 
 ---
@@ -81,7 +85,10 @@ client/
     └── advancedChallenges.js   # Advanced challenge question bank
 server/
 └── src/
-    └── index.ts                # M0 backend placeholder
+    ├── app.ts                  # Express application and middleware
+    ├── config/                 # Environment and MongoDB connection
+    ├── middleware/             # Validation and error handling
+    └── server.ts               # Startup and graceful shutdown
 ```
 
 ---
