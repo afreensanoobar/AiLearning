@@ -125,6 +125,10 @@ export function createProgressRouter(
           return {
             courseId: course._id,
             slug: course.slug,
+            completedLessonIds:
+              progress
+                .find((item) => item.courseId.toString() === course._id.toString())
+                ?.completedLessonIds.map((id) => id.toString()) ?? [],
             completed,
             total,
             percentage: total === 0 ? 0 : Math.round((completed / total) * 100),

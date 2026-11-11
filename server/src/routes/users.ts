@@ -6,7 +6,12 @@ import { requireAuth } from "../auth/require-auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { HttpError } from "../middleware/http-error.js";
 import { validate } from "../middleware/validate.js";
+import { AiStudyPlanCache } from "../models/ai-study-plan.js";
+import { Attempt } from "../models/attempt.js";
+import { ChatSession } from "../models/chat-session.js";
+import { UserActivity } from "../models/user-activity.js";
 import { User } from "../models/user.js";
+import { UserProgress } from "../models/user-progress.js";
 import type { UserRole, LearningLevel } from "../models/user.js";
 
 const profileSchema = z.object({
@@ -98,6 +103,17 @@ export const usersRouter = Router();
 
 usersRouter.use(requireAuth);
 
+usersRouter.get(
+  "/me",
+  asyncHandler(async (_req, res) => {
+    const user = await User.findById(res.locals.auth?.userId);
+    if (!user) {
+      throw new HttpError(401, "UNAUTHORIZED", "Authentication is required.");
+    }
+    res.json({ user: publicUser(user) });
+  })
+);
+
 usersRouter.patch(
   "/me",
   validate(profileSchema),
@@ -123,6 +139,21 @@ usersRouter.patch(
       }
       throw error;
     }
+  })
+);
+
+usersRouter.delete(
+  "/me/progress",
+  asyncHandler(async (_req, res) => {
+    const userId = res.locals.auth!.userId;
+    await Promise.all([
+      Attempt.deleteMany({ userId }),
+      UserProgress.deleteMany({ userId }),
+      ChatSession.deleteMany({ userId }),
+      UserActivity.deleteMany({ userId }),
+      AiStudyPlanCache.deleteMany({ userId }),
+    ]);
+    res.json({ message: "Progress data cleared successfully." });
   })
 );
 

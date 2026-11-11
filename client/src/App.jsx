@@ -4,7 +4,12 @@ import Auth from "./Auth";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminRoute, ProtectedRoute } from "./context/ProtectedRoute";
 import { useAuth } from "./context/useAuth";
-import LearningApp from "./LearningApp";
+import AssessmentPage from "./pages/AssessmentPage";
+import CoursesPage from "./pages/CoursesPage";
+import DashboardPage from "./pages/DashboardPage";
+import ProgressPage from "./pages/ProgressPage";
+import SettingsPage from "./pages/SettingsPage";
+import TutorPage from "./pages/TutorPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,13 +21,13 @@ const queryClient = new QueryClient({
 });
 
 const protectedPages = [
-  ["/dashboard", "dashboard"],
-  ["/courses", "courses"],
-  ["/courses/:slug", "course"],
-  ["/assessment", "assessment"],
-  ["/tutor", "tutor"],
-  ["/progress", "progress"],
-  ["/settings", "settings"],
+  ["/dashboard", DashboardPage],
+  ["/courses", CoursesPage],
+  ["/courses/:slug", CoursesPage],
+  ["/assessment", AssessmentPage],
+  ["/tutor", TutorPage],
+  ["/progress", ProgressPage],
+  ["/settings", SettingsPage],
 ];
 
 function PublicAuthRoute({ mode }) {
@@ -68,13 +73,13 @@ function ApplicationRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<PublicAuthRoute mode="login" />} />
       <Route path="/register" element={<PublicAuthRoute mode="register" />} />
-      {protectedPages.map(([path, key]) => (
+      {protectedPages.map(([path, Page]) => (
         <Route
-          key={key}
+          key={path}
           path={path}
           element={
             <ProtectedRoute>
-              <LearningApp />
+              <Page />
             </ProtectedRoute>
           }
         />

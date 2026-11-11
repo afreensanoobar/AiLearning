@@ -116,6 +116,12 @@ test("progress analytics summarize attempts, lesson activity, and topic performa
     }
   );
   assert.ok(summary.body.streak >= 1);
+  const courseProgress = await agent.get("/api/progress/courses").expect(200);
+  const htmlProgress = courseProgress.body.courses.find(
+    (item: { slug: string }) => item.slug === "html-fundamentals"
+  );
+  assert.equal(htmlProgress.completed, 1);
+  assert.ok(htmlProgress.completedLessonIds.includes(lesson.id));
 
   const topicResponse = await agent.get("/api/progress/topics").expect(200);
   const html = topicResponse.body.topics.find(
