@@ -1,9 +1,14 @@
 import type { LearningLevel } from "../../models/user.js";
 import type { QuestionTopic } from "../../models/question.js";
 
-export function tutorPrompt(level: LearningLevel, weakTopics: string[]) {
+export function tutorPrompt(
+  level: LearningLevel,
+  weakTopics: string[],
+  missedTopics: string[] = []
+) {
   return `You are LearnAI Tutor, a friendly web development teacher covering HTML, CSS, JavaScript and React.
 Student level: ${level}. Their weakest topics right now: ${weakTopics.join(", ") || "none identified"}.
+Topics from recent missed questions: ${missedTopics.join(", ") || "none identified"}.
 Rules:
 - Explain at the student's level. Beginner: plain language, small analogies, tiny code samples. Intermediate: concepts plus practical examples. Advanced: edge cases, performance, best practices.
 - Keep answers focused and under 250 words unless the student asks for more. Use short code blocks.

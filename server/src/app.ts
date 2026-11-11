@@ -16,6 +16,7 @@ import { assessmentsRouter } from "./routes/assessments.js";
 import { coursesRouter } from "./routes/courses.js";
 import { lessonsRouter } from "./routes/lessons.js";
 import { progressRouter } from "./routes/progress.js";
+import { tutorRouter } from "./routes/tutor.js";
 import { usersRouter } from "./routes/users.js";
 
 export const app = express();
@@ -56,5 +57,6 @@ app.use("/api/assessments", assessmentsRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/lessons", lessonsRouter);
 app.use("/api/progress", progressRouter);
+app.use("/api/tutor", tutorRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

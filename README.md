@@ -33,6 +33,8 @@ Progress analytics are available at `GET /api/progress/summary`, `/topics`, `/re
 
 The AI service layer is configured with `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, and `AI_TIMEOUT_MS`. The key is optional while developing; AI requests return a clear unavailable error until it is configured. AI features use a shared Gemini provider, input guard, per-user rate limiter, and one-day response cache.
 
+The tutor API is available at `POST /api/tutor/sessions`, `GET /api/tutor/sessions`, `GET /api/tutor/sessions/:id`, and `DELETE /api/tutor/sessions/:id`. Send a message with `POST /api/tutor/sessions/:id/messages` and `{ "content": "Explain closures", "level": "Beginner" }`; the optional level overrides the signed-in user's current level for that reply. Messages stream as server-sent events, are saved to the user's session, and use a rule-based response if AI is unavailable. Tutor context is built on the server from the student's weakest topics and recent missed-question topics.
+
 ---
 
 ## Topics Covered
