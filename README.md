@@ -25,6 +25,8 @@ npm run seed -w server
 
 Authenticated read endpoints are available at `GET /api/courses`, `GET /api/courses/:slug`, and `GET /api/lessons/:id`. Quiz questions (including their answers) are stored for later assessment APIs and are not exposed by these content endpoints.
 
+Lesson progress is stored per user and course. Use `GET /api/progress/courses` to read course percentages, `POST /api/lessons/:id/complete` to mark a lesson complete, and `DELETE /api/lessons/:id/complete` to undo it. These endpoints require the auth cookie.
+
 ---
 
 ## Topics Covered
