@@ -2,7 +2,7 @@ import { Schema, Types, model } from "mongoose";
 import type { LearningLevel } from "./user.js";
 
 export type QuestionTopic = "HTML" | "CSS" | "JavaScript" | "React";
-export type QuestionStatus = "active" | "draft" | "rejected";
+export type QuestionStatus = "active" | "draft" | "rejected" | "archived";
 export type QuestionSource = "manual" | "ai";
 
 interface QuestionFields {
@@ -52,7 +52,7 @@ const questionSchema = new Schema<QuestionFields>(
     challengeStage: { type: Number, enum: [null, 1, 2, 3], default: null },
     status: {
       type: String,
-      enum: ["active", "draft", "rejected"] satisfies QuestionStatus[],
+      enum: ["active", "draft", "rejected", "archived"] satisfies QuestionStatus[],
       default: "active",
       required: true,
     },

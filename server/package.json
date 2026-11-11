@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
+    "make-admin": "tsx src/scripts/make-admin.ts",
     "lint": "eslint .",
     "test": "tsx --test test/*.test.ts"
   },

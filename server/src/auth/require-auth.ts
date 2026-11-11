@@ -1,5 +1,7 @@
 import type { RequestHandler } from "express";
+import { asyncHandler } from "../middleware/async-handler.js";
 import { HttpError } from "../middleware/http-error.js";
+import { User } from "../models/user.js";
 import type { UserRole } from "../models/user.js";
 import { authCookieName } from "./cookies.js";
 import { verifyAuthToken } from "./tokens.js";
@@ -15,20 +17,27 @@ declare module "express-serve-static-core" {
   }
 }
 
-export const requireAuth: RequestHandler = (req, res, next) => {
+export const requireAuth: RequestHandler = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.[authCookieName];
   if (typeof token !== "string") {
-    return next(new HttpError(401, "UNAUTHORIZED", "Authentication is required."));
+    throw new HttpError(401, "UNAUTHORIZED", "Authentication is required.");
   }
 
+  let payload;
   try {
-    const payload = verifyAuthToken(token);
-    res.locals.auth = { userId: payload.sub, role: payload.role };
-    next();
+    payload = verifyAuthToken(token);
   } catch {
-    next(new HttpError(401, "UNAUTHORIZED", "Authentication is required."));
+    throw new HttpError(401, "UNAUTHORIZED", "Authentication is required.");
   }
-};
+
+  const user = await User.findById(payload.sub).select("role deactivated");
+  if (!user || user.deactivated) {
+    throw new HttpError(401, "UNAUTHORIZED", "Authentication is required.");
+  }
+
+  res.locals.auth = { userId: user.id, role: user.role };
+  next();
+});
 
 export function requireRole(role: UserRole): RequestHandler {
   return (_req, res, next) => {

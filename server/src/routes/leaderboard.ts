@@ -16,7 +16,13 @@ leaderboardRouter.get(
       displayName: string;
       points: number;
     }>([
-      { $match: { role: "student", showOnLeaderboard: { $ne: false } } },
+      {
+        $match: {
+          role: "student",
+          showOnLeaderboard: { $ne: false },
+          deactivated: { $ne: true },
+        },
+      },
       {
         $lookup: {
           from: Attempt.collection.name,

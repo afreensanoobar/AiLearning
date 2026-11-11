@@ -143,6 +143,13 @@ authRouter.post(
     if (!user || !passwordMatches) {
       throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid email or password.");
     }
+    if (user.deactivated) {
+      throw new HttpError(
+        403,
+        "ACCOUNT_DEACTIVATED",
+        "This account has been deactivated."
+      );
+    }
 
     user.lastActiveAt = new Date();
     await user.save();
