@@ -22,13 +22,8 @@ const envSchema = z.object({
       (value) => ["http:", "https:"].includes(new URL(value).protocol),
       "Must use HTTP or HTTPS."
     ),
-  JWT_ACCESS_SECRET: z.string().min(32),
-  JWT_REFRESH_SECRET: z.string().min(32),
-  ACCESS_TOKEN_TTL: z
-    .string()
-    .regex(/^\d+[smhd]$/)
-    .default("15m"),
-  REFRESH_TOKEN_TTL: z
+  JWT_SECRET: z.string().min(32),
+  JWT_TTL: z
     .string()
     .regex(/^\d+[smhd]$/)
     .default("7d"),

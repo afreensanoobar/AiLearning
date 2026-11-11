@@ -9,7 +9,6 @@ interface UserFields {
   passwordHash: string;
   role: UserRole;
   currentLevel: LearningLevel;
-  refreshTokenHash?: string;
   timezone: string;
   lastActiveAt: Date;
   createdAt: Date;
@@ -40,7 +39,6 @@ const userSchema = new Schema<UserFields>(
       default: "Beginner",
       required: true,
     },
-    refreshTokenHash: { type: String, select: false, default: undefined },
     timezone: { type: String, trim: true, default: "UTC", maxlength: 100 },
     lastActiveAt: { type: Date, default: Date.now },
   },

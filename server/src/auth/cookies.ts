@@ -1,28 +1,25 @@
 import type { CookieOptions, Response } from "express";
 import { env } from "../config/env.js";
-import { refreshTokenLifetime } from "./tokens.js";
+import { authTokenLifetime } from "./tokens.js";
 
-export const refreshCookieName = "learnai_refresh";
+export const authCookieName = "learnai_auth";
 
-function refreshCookieOptions(): CookieOptions {
+function authCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api/auth",
-    maxAge: refreshTokenLifetime * 1000,
+    path: "/api",
+    maxAge: authTokenLifetime * 1000,
   };
 }
 
-export function setRefreshCookie(res: Response, token: string) {
-  res.cookie(refreshCookieName, token, refreshCookieOptions());
+export function setAuthCookie(res: Response, token: string) {
+  res.cookie(authCookieName, token, authCookieOptions());
 }
 
-export function clearRefreshCookie(res: Response) {
-  res.clearCookie(refreshCookieName, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/api/auth",
-  });
+export function clearAuthCookie(res: Response) {
+  const options = authCookieOptions();
+  delete options.maxAge;
+  res.clearCookie(authCookieName, options);
 }

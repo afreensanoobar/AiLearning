@@ -1,18 +1,8 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import {
-  clearRefreshCookie,
-  refreshCookieName,
-  setRefreshCookie,
-} from "../auth/cookies.js";
-import {
-  createAccessToken,
-  createRefreshToken,
-  hashRefreshToken,
-  accessTokenLifetime,
-  verifyRefreshToken,
-} from "../auth/tokens.js";
+import { clearAuthCookie, setAuthCookie } from "../auth/cookies.js";
+import { createAuthToken } from "../auth/tokens.js";
 import { User } from "../models/user.js";
 import type { LearningLevel, UserRole } from "../models/user.js";
 import { asyncHandler } from "../middleware/async-handler.js";
@@ -95,24 +85,18 @@ function isDuplicateEmailError(error: unknown) {
 }
 
 function sendSession(
-  res: Parameters<typeof setRefreshCookie>[0],
-  user: Parameters<typeof publicUser>[0],
-  refreshToken: string
+  res: Parameters<typeof setAuthCookie>[0],
+  user: Parameters<typeof publicUser>[0]
 ) {
-  setRefreshCookie(res, refreshToken);
-  res.json({
-    accessToken: createAccessToken({ id: user.id, role: user.role }),
-    expiresIn: accessTokenLifetime,
-    user: publicUser(user),
-  });
+  setAuthCookie(res, createAuthToken({ id: user.id, role: user.role }));
+  res.json({ user: publicUser(user) });
 }
 
 export const authRouter = Router();
 
-authRouter.use(createAuthRateLimit());
-
 authRouter.post(
   "/register",
+  createAuthRateLimit(),
   validate(registerSchema),
   asyncHandler(async (_req, res) => {
     const body = getBody<RegisterInput>(res);
@@ -123,8 +107,6 @@ authRouter.post(
       passwordHash,
     });
     user.lastActiveAt = new Date();
-    const refreshToken = createRefreshToken(user.id);
-    user.refreshTokenHash = hashRefreshToken(refreshToken);
 
     try {
       await user.save();
@@ -140,12 +122,13 @@ authRouter.post(
     }
 
     res.status(201);
-    sendSession(res, user, refreshToken);
+    sendSession(res, user);
   })
 );
 
 authRouter.post(
   "/login",
+  createAuthRateLimit(),
   validate(loginSchema),
   asyncHandler(async (_req, res) => {
     const body = getBody<LoginInput>(res);
@@ -160,93 +143,15 @@ authRouter.post(
     }
 
     user.lastActiveAt = new Date();
-    const refreshToken = createRefreshToken(user.id);
-    user.refreshTokenHash = hashRefreshToken(refreshToken);
     await user.save();
-    sendSession(res, user, refreshToken);
+    sendSession(res, user);
   })
 );
 
-authRouter.post(
-  "/refresh",
-  asyncHandler(async (req, res) => {
-    const token = req.cookies[refreshCookieName];
-    if (typeof token !== "string") {
-      clearRefreshCookie(res);
-      throw new HttpError(
-        401,
-        "INVALID_REFRESH_TOKEN",
-        "Refresh token is invalid or expired."
-      );
-    }
-
-    let payload;
-    try {
-      payload = verifyRefreshToken(token);
-    } catch {
-      clearRefreshCookie(res);
-      throw new HttpError(
-        401,
-        "INVALID_REFRESH_TOKEN",
-        "Refresh token is invalid or expired."
-      );
-    }
-
-    const nextRefreshToken = createRefreshToken(payload.sub);
-    const user = await User.findOneAndUpdate(
-      {
-        _id: payload.sub,
-        refreshTokenHash: hashRefreshToken(token),
-      },
-      {
-        $set: {
-          refreshTokenHash: hashRefreshToken(nextRefreshToken),
-          lastActiveAt: new Date(),
-        },
-      },
-      { returnDocument: "after", runValidators: true }
-    );
-
-    if (!user) {
-      clearRefreshCookie(res);
-      throw new HttpError(
-        401,
-        "INVALID_REFRESH_TOKEN",
-        "Refresh token is invalid or expired."
-      );
-    }
-
-    sendSession(res, user, nextRefreshToken);
-  })
-);
-
-authRouter.post(
-  "/logout",
-  asyncHandler(async (req, res) => {
-    const token = req.cookies[refreshCookieName];
-    if (typeof token === "string") {
-      let payload;
-      try {
-        payload = verifyRefreshToken(token);
-      } catch {
-        payload = undefined;
-      }
-
-      if (payload) {
-        await User.updateOne(
-          {
-            _id: payload.sub,
-            refreshTokenHash: hashRefreshToken(token),
-          },
-          { $unset: { refreshTokenHash: 1 } }
-        );
-      }
-    }
-
-    clearRefreshCookie(res);
-    res.status(204).end();
-  })
-);
+authRouter.post("/logout", (_req, res) => {
+  clearAuthCookie(res);
+  res.status(204).end();
+});
 
 authRouter.get(
   "/me",

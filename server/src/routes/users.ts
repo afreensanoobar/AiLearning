@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { Router } from "express";
 import { z } from "zod";
-import { clearRefreshCookie } from "../auth/cookies.js";
+import { clearAuthCookie } from "../auth/cookies.js";
 import { requireAuth } from "../auth/require-auth.js";
 import { asyncHandler } from "../middleware/async-handler.js";
 import { HttpError } from "../middleware/http-error.js";
@@ -86,7 +86,7 @@ usersRouter.use(requireAuth);
 usersRouter.patch(
   "/me",
   validate(profileSchema),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const body = getBody<ProfileInput>(res);
     try {
       const user = await User.findByIdAndUpdate(
@@ -114,7 +114,7 @@ usersRouter.patch(
 usersRouter.post(
   "/me/password",
   validate(passwordSchema),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const body = getBody<PasswordInput>(res);
     const user = await User.findById(res.locals.auth?.userId).select("+passwordHash");
     if (!user) {
@@ -130,16 +130,10 @@ usersRouter.post(
     }
 
     const passwordHash = await bcrypt.hash(body.newPassword, 12);
-    await User.updateOne(
-      { _id: user.id },
-      {
-        $set: { passwordHash },
-        $unset: { refreshTokenHash: 1 },
-      }
-    );
-    clearRefreshCookie(res);
+    await User.updateOne({ _id: user.id }, { $set: { passwordHash } });
+    clearAuthCookie(res);
     res.json({
-      message: "Password updated successfully. Please sign in again.",
+      message: "Password updated successfully.",
     });
   })
 );

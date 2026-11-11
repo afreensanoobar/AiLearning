@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
 import { HttpError } from "../middleware/http-error.js";
 import type { UserRole } from "../models/user.js";
-import { verifyAccessToken } from "./tokens.js";
+import { authCookieName } from "./cookies.js";
+import { verifyAuthToken } from "./tokens.js";
 
 export interface AuthContext {
   userId: string;
@@ -15,14 +16,13 @@ declare module "express-serve-static-core" {
 }
 
 export const requireAuth: RequestHandler = (req, res, next) => {
-  const authorization = req.get("authorization");
-  const match = authorization?.match(/^Bearer\s+(\S+)$/i);
-  if (!match) {
+  const token = req.cookies?.[authCookieName];
+  if (typeof token !== "string") {
     return next(new HttpError(401, "UNAUTHORIZED", "Authentication is required."));
   }
 
   try {
-    const payload = verifyAccessToken(match[1]);
+    const payload = verifyAuthToken(token);
     res.locals.auth = { userId: payload.sub, role: payload.role };
     next();
   } catch {

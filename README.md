@@ -15,7 +15,7 @@ A college project built with **React + Vite + Tailwind CSS** that provides an ad
 - **Learning Streak** – Consecutive-day activity tracker
 - **Auth** – Client-side register/login system (demo purposes)
 
-The backend auth API is now available at `/api/auth` and `/api/users/me` (register, login, refresh, logout, current user, profile and password endpoints). The current React screen still uses demo localStorage authentication; it is connected to the API in a later frontend module.
+The backend auth API is now available at `/api/auth` and `/api/users/me` (register, login, logout, current user, profile and password endpoints). It uses one signed JWT in an httpOnly cookie; there is no refresh-token flow. Logging out or changing a password clears the browser cookie, but a copied JWT remains valid until it expires. The current React screen still uses demo localStorage authentication; it is connected to the API in a later frontend module.
 
 ---
 
@@ -59,7 +59,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Set `MONGODB_URI` in `.env` to a running MongoDB instance, and replace the example JWT secrets with private random values of at least 32 characters before starting the API. Then open **http://localhost:5173** in your browser. The API health check is available at **http://localhost:4000/api/health**.
+Set `MONGODB_URI` in `.env` to a running MongoDB instance, and replace `JWT_SECRET` with a private random value of at least 32 characters before starting the API. Auth cookies expire after the configured `JWT_TTL` (7 days by default); users sign in again when it expires. Then open **http://localhost:5173** in your browser. The API health check is available at **http://localhost:4000/api/health**.
 
 **Other commands:**
 
