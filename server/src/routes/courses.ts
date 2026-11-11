@@ -22,8 +22,31 @@ coursesRouter.use(requireAuth);
 coursesRouter.get(
   "/",
   asyncHandler(async (_req, res) => {
-    const results = await Course.find().sort({ order: 1 }).lean();
-    res.json({ courses: results });
+    const [results, lessonSummaries] = await Promise.all([
+      Course.find().sort({ order: 1 }).lean(),
+      Lesson.aggregate([
+        {
+          $group: {
+            _id: "$courseId",
+            lessonCount: { $sum: 1 },
+            durationMinutes: { $sum: "$estimatedMinutes" },
+          },
+        },
+      ]),
+    ]);
+    const summariesByCourse = new Map(
+      lessonSummaries.map((summary) => [summary._id.toString(), summary])
+    );
+    res.json({
+      courses: results.map((course) => {
+        const summary = summariesByCourse.get(course._id.toString());
+        return {
+          ...course,
+          lessonCount: summary?.lessonCount ?? 0,
+          durationMinutes: summary?.durationMinutes ?? 0,
+        };
+      }),
+    });
   })
 );
 

@@ -4,6 +4,9 @@ interface CourseFields {
   slug: string;
   title: string;
   category: string;
+  description?: string;
+  level?: "Beginner" | "Intermediate" | "Advanced";
+  skills?: string[];
   order: number;
   ui: {
     color: string;
@@ -18,6 +21,13 @@ const courseSchema = new Schema<CourseFields>(
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     title: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
+    description: { type: String, trim: true, default: "" },
+    level: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+      default: "Beginner",
+    },
+    skills: { type: [String], default: [] },
     order: { type: Number, required: true, min: 0 },
     ui: {
       color: { type: String, required: true },

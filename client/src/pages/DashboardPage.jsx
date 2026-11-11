@@ -6,6 +6,7 @@ import { useCourseProgress } from "../hooks/useCourseProgress";
 import { useHistory } from "../hooks/useHistory";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { useSummary } from "../hooks/useSummary";
+import { getRecommendedLesson } from "../lessonsData";
 import BadgeCollection from "../components/BadgeCollection";
 import LeaderboardCard from "../components/LeaderboardCard";
 import { PageError, PageLoading } from "./PageState";
@@ -160,17 +161,34 @@ export default function DashboardPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {recommendations.data.recommendations.map((item, index) => (
-                <div
-                  key={`${item.topic}-${index}`}
-                  className="rounded-xl bg-violet-50 p-4"
-                >
-                  <p className="font-semibold text-violet-900">{item.topic}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {item.message} {item.suggestion}
-                  </p>
-                </div>
-              ))}
+              {recommendations.data.recommendations.map((item, index) => {
+                const lesson = getRecommendedLesson(item.topic);
+                return (
+                  <div
+                    key={`${item.topic}-${index}`}
+                    className="rounded-xl bg-violet-50 p-4"
+                  >
+                    <p className="font-semibold text-violet-900">{item.topic}</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {item.message} {item.suggestion}
+                    </p>
+                    {lesson && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            `/courses/${lesson.courseSlug}#lesson-${lesson.id}`
+                          )
+                        }
+                        className="mt-3 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
+                      >
+                        <BookOpen aria-hidden="true" size={16} />
+                        Review {lesson.title}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
           <button

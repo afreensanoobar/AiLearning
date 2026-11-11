@@ -29,10 +29,10 @@ test("content seed is idempotent and authenticated read endpoints return content
   });
 
   await connectToDatabase();
-  assert.deepEqual(await seedContent(), { courses: 4, lessons: 20, questions: 28 });
-  assert.deepEqual(await seedContent(), { courses: 4, lessons: 20, questions: 28 });
-  assert.equal(await Course.countDocuments(), 4);
-  assert.equal(await Lesson.countDocuments(), 20);
+  assert.deepEqual(await seedContent(), { courses: 12, lessons: 60, questions: 28 });
+  assert.deepEqual(await seedContent(), { courses: 12, lessons: 60, questions: 28 });
+  assert.equal(await Course.countDocuments(), 12);
+  assert.equal(await Lesson.countDocuments(), 60);
   assert.equal(await Question.countDocuments(), 28);
   assert.equal(await Question.countDocuments({ challengeStage: null }), 16);
   assert.equal(await Question.countDocuments({ challengeStage: { $ne: null } }), 12);
@@ -61,11 +61,29 @@ test("content seed is idempotent and authenticated read endpoints return content
     .expect(201);
 
   const courseList = await agent.get("/api/courses").expect(200);
-  assert.equal(courseList.body.courses.length, 4);
+  assert.equal(courseList.body.courses.length, 12);
   assert.deepEqual(
     courseList.body.courses.map((course: { title: string }) => course.title),
-    ["HTML Fundamentals", "CSS Fundamentals", "JavaScript", "React Development"]
+    [
+      "HTML Fundamentals",
+      "CSS Fundamentals",
+      "JavaScript",
+      "React Development",
+      "TypeScript Essentials",
+      "Node.js & Express APIs",
+      "Python Programming",
+      "SQL & Databases",
+      "Data Analytics with Python",
+      "Generative AI Foundations",
+      "Git & GitHub",
+      "UI/UX Design Foundations",
+    ]
   );
+  assert.equal(courseList.body.courses[0].level, "Beginner");
+  assert.equal(courseList.body.courses[0].lessonCount, 5);
+  assert.ok(courseList.body.courses.some(
+    (course: { category: string }) => course.category === "AI & Machine Learning"
+  ));
   assert.equal("correctIndex" in courseList.body, false);
 
   const courseDetail = await agent.get("/api/courses/html-fundamentals").expect(200);

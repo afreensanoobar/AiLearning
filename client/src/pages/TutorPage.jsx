@@ -1,18 +1,47 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Copy, MessageSquarePlus, Send, Square, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Copy,
+  LoaderCircle,
+  MessageSquarePlus,
+  Send,
+  Square,
+  Sparkles,
+} from "lucide-react";
 import { apiPost, apiRequest, apiStream } from "../api/client";
 import { useAuth } from "../context/useAuth";
+import { getLessonDataById } from "../lessonsData";
 import AppShell from "../layout/AppShell";
 import { PageError, PageLoading, PageNotice } from "./PageState";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const cardClass = "rounded-2xl border border-slate-200 bg-white shadow-sm";
 
+function lessonFallbackAnswer(question, level, lesson) {
+  const keyPoints = lesson?.keyPoints ?? [];
+  return [
+    `The live tutor is unavailable, so here is a lesson-based review for a ${level} learner.`,
+    `Lesson: ${lesson?.title ?? "Current lesson"}`,
+    ...keyPoints.map((point) => `- ${point}`),
+    `Your question: ${question}`,
+    "Try connecting your question to one of these key points, then review the lesson notes.",
+  ].join("\n\n");
+}
+
 export default function TutorPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const lessonId = searchParams.get("lessonId");
+  const lessonData = getLessonDataById(searchParams.get("lessonDataId"));
   const [sessionId, setSessionId] = useState(null);
   const [level, setLevel] = useState(user?.currentLevel ?? "Beginner");
+  const [lessonQuestion, setLessonQuestion] = useState("");
+  const [lessonAnswer, setLessonAnswer] = useState("");
+  const [lessonFallback, setLessonFallback] = useState(false);
+  const [isAskingLesson, setIsAskingLesson] = useState(false);
   const [message, setMessage] = useState("");
   const [pendingMessages, setPendingMessages] = useState([]);
   const [streamText, setStreamText] = useState("");
@@ -24,6 +53,7 @@ export default function TutorPage() {
   const sessionsQuery = useQuery({
     queryKey: ["tutor", "sessions"],
     queryFn: () => apiRequest("/tutor/sessions"),
+    enabled: !lessonId,
   });
   const sessions = sessionsQuery.data?.sessions ?? [];
   const firstSession = sessions[0];
@@ -32,7 +62,7 @@ export default function TutorPage() {
   const sessionQuery = useQuery({
     queryKey: ["tutor", "sessions", activeSessionId],
     queryFn: () => apiRequest(`/tutor/sessions/${activeSessionId}`),
-    enabled: Boolean(activeSessionId),
+    enabled: Boolean(activeSessionId) && !lessonId,
   });
   const newSessionMutation = useMutation({
     mutationFn: () => apiPost("/tutor/sessions", {}),
@@ -49,6 +79,40 @@ export default function TutorPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sessionQuery.data, pendingMessages, streamText]);
+
+  const askAboutLesson = async (event) => {
+    event.preventDefault();
+    const question = lessonQuestion.trim();
+    if (!lessonId || !question || isAskingLesson) return;
+
+    setIsAskingLesson(true);
+    setLessonAnswer("");
+    setLessonFallback(false);
+    const notes = [
+      lessonData?.notes,
+      lessonData?.keyPoints?.length
+        ? `Key points:\n${lessonData.keyPoints.map((point) => `- ${point}`).join("\n")}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    try {
+      const result = await apiPost("/tutor", {
+        lessonId,
+        question,
+        notes,
+      });
+      setLessonAnswer(result.answer);
+      setLessonFallback(Boolean(result.fallback));
+    } catch {
+      setLessonAnswer(
+        lessonFallbackAnswer(question, user?.currentLevel ?? "Beginner", lessonData)
+      );
+      setLessonFallback(true);
+    } finally {
+      setIsAskingLesson(false);
+    }
+  };
 
   const send = async (event) => {
     event.preventDefault();
@@ -95,6 +159,104 @@ export default function TutorPage() {
   };
 
   const stop = () => abortRef.current?.abort();
+
+  if (lessonId) {
+    return (
+      <AppShell activePage="AI Tutor">
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              lessonData
+                ? `/courses/${lessonData.courseSlug}#lesson-${lessonData.id}`
+                : "/courses"
+            )
+          }
+          className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
+        >
+          <ArrowLeft aria-hidden="true" size={17} /> Back to lesson
+        </button>
+        <section className={`${cardClass} mx-auto max-w-3xl p-5 sm:p-7`}>
+          <div className="flex items-start gap-3">
+            <span className="rounded-xl bg-violet-100 p-3 text-violet-700">
+              <Sparkles aria-hidden="true" size={22} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-violet-700">
+                {lessonData?.courseTitle ?? "LearnAI lesson"}
+              </p>
+              <h1 className="mt-1 text-2xl font-bold text-slate-800">
+                Ask about {lessonData?.title ?? "this lesson"}
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Your tutor uses this lesson&apos;s material and your current learning
+                level ({user?.currentLevel ?? "Beginner"}).
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={askAboutLesson} className="mt-6">
+            <label
+              htmlFor="lesson-tutor-question"
+              className="mb-2 block text-sm font-semibold text-slate-700"
+            >
+              What would you like clarified?
+            </label>
+            <textarea
+              id="lesson-tutor-question"
+              rows={4}
+              maxLength={1000}
+              value={lessonQuestion}
+              disabled={isAskingLesson}
+              onChange={(event) => setLessonQuestion(event.target.value)}
+              placeholder="Ask a question about the video or lesson notes..."
+              className="w-full resize-y rounded-xl border border-slate-200 p-3 text-sm leading-6 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100 disabled:bg-slate-50"
+            />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">{lessonQuestion.length}/1000</p>
+              <button
+                type="submit"
+                disabled={!lessonQuestion.trim() || isAskingLesson}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isAskingLesson ? (
+                  <>
+                    <LoaderCircle aria-hidden="true" className="animate-spin" size={17} />
+                    Thinking...
+                  </>
+                ) : (
+                  <>
+                    <Send aria-hidden="true" size={16} />
+                    Ask tutor
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {isAskingLesson && (
+            <p className="mt-5 text-sm text-slate-500" role="status" aria-live="polite">
+              The tutor is reviewing your lesson question...
+            </p>
+          )}
+          {lessonAnswer && (
+            <article className="mt-6 rounded-2xl bg-slate-50 p-4 sm:p-5">
+              {lessonFallback && (
+                <p className="mb-3 text-xs font-semibold text-amber-800" role="status">
+                  Built-in lesson guidance is shown because the AI service did not
+                  respond.
+                </p>
+              )}
+              <h2 className="mb-2 font-bold text-slate-800">Tutor response</h2>
+              <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                {lessonAnswer}
+              </p>
+            </article>
+          )}
+        </section>
+      </AppShell>
+    );
+  }
 
   if (sessionsQuery.isPending) {
     return (

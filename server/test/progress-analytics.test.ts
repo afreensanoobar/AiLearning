@@ -107,7 +107,7 @@ test("progress analytics summarize attempts, lesson activity, and topic performa
       currentLevel: summary.body.currentLevel,
     },
     {
-      enrolledCourses: 4,
+      enrolledCourses: 12,
       completedLessons: 1,
       averageScore: 70,
       todayAssessments: 1,

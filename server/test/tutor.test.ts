@@ -22,6 +22,7 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
     { createTutorRouter },
     { Attempt },
     { ChatSession },
+    { Lesson },
     { Question },
     { connectToDatabase, disconnectFromDatabase },
     { generateTutorResponse },
@@ -31,6 +32,7 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
     import("../src/routes/tutor.js"),
     import("../src/models/attempt.js"),
     import("../src/models/chat-session.js"),
+    import("../src/models/lesson.js"),
     import("../src/models/question.js"),
     import("../src/config/database.js"),
     import("../src/services/ruleTutor.js"),
@@ -39,6 +41,16 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   const aiRequests: Array<{ system: string; messages: Array<{ content: string }> }> = [];
   let cancelledStream: Promise<void> | undefined;
   const mockGateway = {
+    async generate(
+      _feature: string,
+      input: {
+        system: string;
+        messages: Array<{ content: string }>;
+      }
+    ) {
+      aiRequests.push(input);
+      return { text: "Lesson-specific tutor reply." };
+    },
     async *stream(
       _feature: string,
       input: {
@@ -81,6 +93,11 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   await connectToDatabase();
   await seedContent();
 
+  await request(app)
+    .post("/api/tutor")
+    .send({ lessonId: "000000000000000000000000", question: "Explain HTML" })
+    .expect(401);
+
   const student = request.agent(app);
   await student
     .post("/api/auth/register")
@@ -97,6 +114,34 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   });
   assert.ok(lessonQuestion);
   const studentId = (await student.get("/api/auth/me").expect(200)).body.user.id;
+  const lesson = await Lesson.findOne({ title: "Introduction to HTML" });
+  assert.ok(lesson);
+
+  const lessonReply = await student
+    .post("/api/tutor")
+    .send({
+      lessonId: lesson.id,
+      question: "Explain this lesson",
+      notes: "Notes supplied for the lesson.",
+    })
+    .expect(200);
+  assert.deepEqual(lessonReply.body, {
+    answer: "Lesson-specific tutor reply.",
+    fallback: false,
+  });
+  assert.match(aiRequests[0]!.system, /Student level: Beginner/);
+  assert.match(aiRequests[0]!.system, /Lesson: Introduction to HTML/);
+  assert.match(aiRequests[0]!.system, /Notes supplied for the lesson/);
+  assert.equal(aiRequests[0]!.messages.at(-1)?.content, "Explain this lesson");
+
+  await student
+    .post("/api/tutor")
+    .send({ lessonId: lesson.id, question: "x".repeat(1001) })
+    .expect(400);
+  await student
+    .post("/api/tutor")
+    .send({ lessonId: "not-an-object-id", question: "Explain HTML" })
+    .expect(400);
 
   await Attempt.create({
     userId: studentId,
@@ -129,10 +174,10 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   assert.match(streamed.text, /event: chunk/);
   assert.match(streamed.text, /Personalized tutor reply/);
   assert.ok(streamed.text.includes('event: done\ndata: {"fallback":false}'));
-  assert.match(aiRequests[0]!.system, /Student level: Advanced/);
-  assert.match(aiRequests[0]!.system, /weakest topics right now: HTML, CSS/);
-  assert.match(aiRequests[0]!.system, /recent missed questions: HTML/);
-  assert.equal(aiRequests[0]!.messages.at(-1)?.content, "Explain closures");
+  assert.match(aiRequests[1]!.system, /Student level: Advanced/);
+  assert.match(aiRequests[1]!.system, /weakest topics right now: HTML, CSS/);
+  assert.match(aiRequests[1]!.system, /recent missed questions: HTML/);
+  assert.equal(aiRequests[1]!.messages.at(-1)?.content, "Explain closures");
 
   const session = await student.get(`/api/tutor/sessions/${sessionId}`).expect(200);
   assert.equal(session.body.session.title, "Explain closures");
@@ -151,6 +196,18 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
 
   const fallbackSession = (await student.post("/api/tutor-fallback/sessions").expect(201))
     .body.session;
+  const lessonFallback = await student
+    .post("/api/tutor-fallback")
+    .send({
+      lessonId: lesson.id,
+      question: "Explain JavaScript closures",
+      notes: "Review lexical scope.",
+    })
+    .expect(200);
+  assert.equal(lessonFallback.body.fallback, true);
+  assert.match(lessonFallback.body.answer, /inner function remembers variables/);
+  assert.match(lessonFallback.body.answer, /Review lexical scope/);
+
   const beginner = await student
     .post(`/api/tutor-fallback/sessions/${fallbackSession._id}/messages`)
     .send({ content: "Explain JavaScript closures", level: "Beginner" })

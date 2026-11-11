@@ -48,7 +48,7 @@ test("lesson completion is idempotent and course progress updates", async (t) =>
   await User.updateOne({ _id: user._id }, { $set: { lastActiveAt: new Date(0) } });
 
   const initialProgress = await agent.get("/api/progress/courses").expect(200);
-  assert.equal(initialProgress.body.courses.length, 4);
+  assert.equal(initialProgress.body.courses.length, 12);
   assert.ok(
     initialProgress.body.courses.every(
       (course: { completed: number; percentage: number }) =>

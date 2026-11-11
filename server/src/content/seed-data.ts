@@ -5,6 +5,9 @@ export interface CourseSeed {
   slug: string;
   title: string;
   category: string;
+  description: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  skills: string[];
   order: number;
   ui: {
     color: string;
@@ -30,6 +33,10 @@ export const courses: CourseSeed[] = [
     slug: "html-fundamentals",
     title: "HTML Fundamentals",
     category: "Web Fundamentals",
+    description:
+      "Build accessible, well-structured web pages with semantic HTML, forms, and modern document elements.",
+    level: "Beginner",
+    skills: ["Semantic HTML", "Forms", "Accessibility"],
     order: 0,
     ui: {
       color: "bg-violet-500",
@@ -49,6 +56,10 @@ export const courses: CourseSeed[] = [
     slug: "css-fundamentals",
     title: "CSS Fundamentals",
     category: "Web Fundamentals",
+    description:
+      "Style responsive interfaces with selectors, layout systems, color, and practical design foundations.",
+    level: "Beginner",
+    skills: ["Selectors", "Flexbox", "Responsive design"],
     order: 1,
     ui: {
       color: "bg-blue-500",
@@ -68,6 +79,10 @@ export const courses: CourseSeed[] = [
     slug: "javascript",
     title: "JavaScript",
     category: "Programming",
+    description:
+      "Learn the language of the web, from variables and functions to DOM updates and browser events.",
+    level: "Beginner",
+    skills: ["JavaScript", "DOM", "Events"],
     order: 2,
     ui: {
       color: "bg-yellow-500",
@@ -86,7 +101,11 @@ export const courses: CourseSeed[] = [
   {
     slug: "react-development",
     title: "React Development",
-    category: "Web Development",
+    category: "Frontend Development",
+    description:
+      "Create interactive user interfaces with components, state, hooks, and client-side routing.",
+    level: "Intermediate",
+    skills: ["React", "Hooks", "Routing"],
     order: 3,
     ui: {
       color: "bg-emerald-500",
@@ -100,6 +119,190 @@ export const courses: CourseSeed[] = [
       "Props and State",
       "React Hooks",
       "React Router",
+    ],
+  },
+  {
+    slug: "typescript-essentials",
+    title: "TypeScript Essentials",
+    category: "Programming",
+    description:
+      "Make JavaScript easier to maintain with types, interfaces, unions, and safer function contracts.",
+    level: "Intermediate",
+    skills: ["TypeScript", "Types", "Interfaces"],
+    order: 4,
+    ui: {
+      color: "bg-blue-600",
+      bg: "bg-blue-100",
+      icon: "TS",
+      iconColor: "text-blue-700",
+    },
+    lessons: [
+      "Why TypeScript",
+      "Primitive and Union Types",
+      "Objects and Interfaces",
+      "Typed Functions",
+      "Generics and Narrowing",
+    ],
+  },
+  {
+    slug: "node-express-apis",
+    title: "Node.js & Express APIs",
+    category: "Backend Development",
+    description:
+      "Build practical HTTP APIs with Express, request validation, middleware, and clear route design.",
+    level: "Intermediate",
+    skills: ["Node.js", "Express", "REST APIs"],
+    order: 5,
+    ui: {
+      color: "bg-emerald-600",
+      bg: "bg-emerald-100",
+      icon: "API",
+      iconColor: "text-emerald-700",
+    },
+    lessons: [
+      "Node.js Runtime",
+      "Express Routes",
+      "Request and Response",
+      "Middleware and Validation",
+      "Designing REST Endpoints",
+    ],
+  },
+  {
+    slug: "python-programming",
+    title: "Python Programming",
+    category: "Programming",
+    description:
+      "Start programming with Python through variables, control flow, reusable functions, and collections.",
+    level: "Beginner",
+    skills: ["Python", "Functions", "Collections"],
+    order: 6,
+    ui: {
+      color: "bg-amber-500",
+      bg: "bg-amber-100",
+      icon: "PY",
+      iconColor: "text-amber-700",
+    },
+    lessons: [
+      "Python Setup and Syntax",
+      "Variables and Data Types",
+      "Conditions and Loops",
+      "Functions and Modules",
+      "Lists and Dictionaries",
+    ],
+  },
+  {
+    slug: "sql-databases",
+    title: "SQL & Databases",
+    category: "Data & Analytics",
+    description:
+      "Query relational data, combine tables, and learn the database concepts behind everyday applications.",
+    level: "Beginner",
+    skills: ["SQL", "Joins", "Data modeling"],
+    order: 7,
+    ui: {
+      color: "bg-cyan-600",
+      bg: "bg-cyan-100",
+      icon: "SQL",
+      iconColor: "text-cyan-700",
+    },
+    lessons: [
+      "Relational Database Basics",
+      "Selecting and Filtering Data",
+      "Sorting and Aggregation",
+      "Joining Tables",
+      "Tables and Relationships",
+    ],
+  },
+  {
+    slug: "data-analytics-python",
+    title: "Data Analytics with Python",
+    category: "Data & Analytics",
+    description:
+      "Explore datasets with Python, clean and summarize information, and communicate useful findings.",
+    level: "Intermediate",
+    skills: ["Pandas", "Data cleaning", "Analysis"],
+    order: 8,
+    ui: {
+      color: "bg-indigo-600",
+      bg: "bg-indigo-100",
+      icon: "DATA",
+      iconColor: "text-indigo-700",
+    },
+    lessons: [
+      "Working with Data",
+      "Loading a Dataset",
+      "Cleaning Missing Values",
+      "Summaries and Grouping",
+      "Communicating Insights",
+    ],
+  },
+  {
+    slug: "generative-ai-foundations",
+    title: "Generative AI Foundations",
+    category: "AI & Machine Learning",
+    description:
+      "Understand how generative AI works and practice writing clear prompts for useful, responsible results.",
+    level: "Beginner",
+    skills: ["Generative AI", "Prompting", "Responsible AI"],
+    order: 9,
+    ui: {
+      color: "bg-violet-600",
+      bg: "bg-violet-100",
+      icon: "AI",
+      iconColor: "text-violet-700",
+    },
+    lessons: [
+      "What Generative AI Can Do",
+      "Models, Tokens, and Context",
+      "Writing Clear Prompts",
+      "Evaluating AI Responses",
+      "Responsible AI Use",
+    ],
+  },
+  {
+    slug: "git-github",
+    title: "Git & GitHub",
+    category: "Developer Tools",
+    description:
+      "Track changes with Git, work with branches, and collaborate through GitHub pull requests.",
+    level: "Beginner",
+    skills: ["Git", "Branches", "GitHub"],
+    order: 10,
+    ui: {
+      color: "bg-slate-600",
+      bg: "bg-slate-100",
+      icon: "GIT",
+      iconColor: "text-slate-700",
+    },
+    lessons: [
+      "Version Control Basics",
+      "Commits and Change History",
+      "Branches and Merging",
+      "Working with GitHub",
+      "Pull Requests and Reviews",
+    ],
+  },
+  {
+    slug: "ui-ux-design",
+    title: "UI/UX Design Foundations",
+    category: "Design & UX",
+    description:
+      "Design clearer digital experiences with user journeys, wireframes, visual hierarchy, and usability basics.",
+    level: "Beginner",
+    skills: ["User journeys", "Wireframing", "Usability"],
+    order: 11,
+    ui: {
+      color: "bg-pink-600",
+      bg: "bg-pink-100",
+      icon: "UX",
+      iconColor: "text-pink-700",
+    },
+    lessons: [
+      "UX and UI Roles",
+      "Understanding Users",
+      "Mapping a User Journey",
+      "Wireframes and Hierarchy",
+      "Usability and Iteration",
     ],
   },
 ];
