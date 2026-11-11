@@ -17,6 +17,14 @@ A college project built with **React + Vite + Tailwind CSS** that provides an ad
 
 The backend auth API is now available at `/api/auth` and `/api/users/me` (register, login, logout, current user, profile and password endpoints). It uses one signed JWT in an httpOnly cookie; there is no refresh-token flow. Logging out or changing a password clears the browser cookie, but a copied JWT remains valid until it expires. The current React screen still uses demo localStorage authentication; it is connected to the API in a later frontend module.
 
+Seed the initial course, lesson, and assessment-question content after configuring MongoDB:
+
+```bash
+npm run seed -w server
+```
+
+Authenticated read endpoints are available at `GET /api/courses`, `GET /api/courses/:slug`, and `GET /api/lessons/:id`. Quiz questions (including their answers) are stored for later assessment APIs and are not exposed by these content endpoints.
+
 ---
 
 ## Topics Covered
