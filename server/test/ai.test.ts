@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import express from "express";
 import request from "supertest";
 import { test } from "node:test";
+import type { AssistantMessageDeltaEvent, SessionConfig } from "@github/copilot-sdk";
 import { createAiRateLimit } from "../src/services/ai/rate-limit.js";
 import { AiError } from "../src/services/ai/provider.js";
 import type { AiProvider, AiRequest } from "../src/services/ai/provider.js";
+import type { CopilotClientLike } from "../src/services/ai/copilot.js";
 import { guardHistory, guardInput } from "../src/services/ai/guard.js";
 import { errorHandler } from "../src/middleware/error-handler.js";
 
@@ -122,6 +124,122 @@ test("Gemini provider maps timeout and streams text chunks", async () => {
   const chunks: string[] = [];
   for await (const chunk of streaming.stream(requestInput)) chunks.push(chunk);
   assert.deepEqual(chunks, ["Hello ", "world"]);
+});
+
+test("Copilot provider disables tools, appends app instructions, and streams deltas", async () => {
+  setTestEnvironment();
+  const { createCopilotProvider } = await import("../src/services/ai/copilot.js");
+  const configs: SessionConfig[] = [];
+  const prompts: string[] = [];
+  const deleted: string[] = [];
+  const stopped = { value: false };
+  let deltaHandler: ((event: AssistantMessageDeltaEvent) => void) | undefined;
+
+  const client: CopilotClientLike = {
+    async start() {},
+    async createSession(config) {
+      configs.push(config);
+      const sessionId = `session-${configs.length}`;
+      return {
+        sessionId,
+        async sendAndWait({ prompt }) {
+          prompts.push(prompt);
+          if (config.streaming) {
+            queueMicrotask(() =>
+              deltaHandler?.({
+                data: { deltaContent: "Hello " },
+              } as AssistantMessageDeltaEvent)
+            );
+            queueMicrotask(() =>
+              deltaHandler?.({
+                data: { deltaContent: "world" },
+              } as AssistantMessageDeltaEvent)
+            );
+            return { data: { content: "Hello world" } };
+          }
+          return { data: { content: "Generated quiz" } };
+        },
+        on(_eventType, handler) {
+          deltaHandler = handler;
+          return () => {
+            deltaHandler = undefined;
+          };
+        },
+        async abort() {},
+      };
+    },
+    async deleteSession(sessionId) {
+      deleted.push(sessionId);
+    },
+    async stop() {
+      stopped.value = true;
+      return [];
+    },
+  };
+  const provider = createCopilotProvider({
+    clientFactory: () => client,
+    timeoutMs: 1000,
+  });
+
+  const generated = await provider.generate({
+    ...requestInput,
+    messages: [
+      { role: "assistant", content: "Prior explanation." },
+      { role: "user", content: "Make a quiz." },
+    ],
+  });
+  assert.equal(generated.text, "Generated quiz");
+  assert.match(prompts[0]!, /Tutor: Prior explanation\.\n\nLearner: Make a quiz\./);
+
+  const chunks: string[] = [];
+  for await (const chunk of provider.stream(requestInput)) chunks.push(chunk);
+  assert.deepEqual(chunks, ["Hello ", "world"]);
+  assert.equal(configs[0]?.model, "auto");
+  assert.equal(configs[0]?.streaming, false);
+  assert.equal(configs[1]?.streaming, true);
+  assert.equal(configs[0]?.availableTools?.length, 0);
+  assert.equal(configs[0]?.enableSessionStore, false);
+  assert.deepEqual(configs[0]?.systemMessage, {
+    mode: "append",
+    content: requestInput.system,
+  });
+  assert.deepEqual(deleted, ["session-1", "session-2"]);
+  assert.deepEqual(await provider.shutdown(), []);
+  assert.equal(stopped.value, true);
+});
+
+test("Copilot provider maps rate limits and deletes failed sessions", async () => {
+  setTestEnvironment();
+  const { createCopilotProvider } = await import("../src/services/ai/copilot.js");
+  const deleted: string[] = [];
+  const client: CopilotClientLike = {
+    async start() {},
+    async createSession() {
+      return {
+        sessionId: "limited-session",
+        async sendAndWait() {
+          throw new Error("429 rate limit exceeded");
+        },
+        on() {
+          return () => {};
+        },
+        async abort() {},
+      };
+    },
+    async deleteSession(sessionId) {
+      deleted.push(sessionId);
+    },
+    async stop() {
+      return [];
+    },
+  };
+  const provider = createCopilotProvider({ clientFactory: () => client });
+
+  await assert.rejects(provider.generate(requestInput), {
+    code: "AI_RATE_LIMITED",
+    statusCode: 429,
+  });
+  assert.deepEqual(deleted, ["limited-session"]);
 });
 
 test("AI gateway returns cached output without calling the provider again", async () => {

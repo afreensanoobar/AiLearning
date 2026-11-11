@@ -27,9 +27,10 @@ const envSchema = z.object({
     .string()
     .regex(/^\d+[smhd]$/)
     .default("7d"),
-  AI_PROVIDER: z.enum(["gemini"]).default("gemini"),
+  AI_PROVIDER: z.enum(["copilot", "gemini"]).default("copilot"),
+  COPILOT_GITHUB_TOKEN: z.string().optional(),
   AI_API_KEY: z.string().optional(),
-  AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(20000),
+  AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(120000),
 });
 
 const result = envSchema.safeParse(process.env);

@@ -15,6 +15,7 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   process.env.CLIENT_URL = "http://localhost:5173";
   process.env.JWT_SECRET = "test_jwt_secret_that_is_at_least_32_characters";
   process.env.JWT_TTL = "7d";
+  process.env.AI_PROVIDER = "gemini";
   process.env.AI_API_KEY = "";
 
   const [

@@ -5,6 +5,7 @@ import { app } from "./app.js";
 import { connectToDatabase, disconnectFromDatabase } from "./config/database.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
+import { shutdownAiProvider } from "./services/ai/factory.js";
 
 async function listen() {
   const server = app.listen(env.PORT);
@@ -32,6 +33,17 @@ function registerShutdownHandlers(server: Server) {
     server.close(async (error) => {
       if (error) {
         logger.error({ err: error }, "HTTP server shutdown failed");
+        process.exitCode = 1;
+      }
+
+      try {
+        const aiErrors = await shutdownAiProvider();
+        for (const aiError of aiErrors) {
+          logger.error({ err: aiError }, "Copilot runtime shutdown failed");
+          process.exitCode = 1;
+        }
+      } catch (aiError) {
+        logger.error({ err: aiError }, "Copilot runtime shutdown failed");
         process.exitCode = 1;
       }
 
