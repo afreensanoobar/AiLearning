@@ -12,6 +12,7 @@ import {
 import { apiPost } from "../api/client";
 import BadgeCollection from "../components/BadgeCollection";
 import LeaderboardCard from "../components/LeaderboardCard";
+import { useCourseProgress } from "../hooks/useCourseProgress";
 import { useHistory } from "../hooks/useHistory";
 import { useLearningPath } from "../hooks/useLearningPath";
 import { useSummary } from "../hooks/useSummary";
@@ -25,12 +26,13 @@ const cardClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
 export default function ProgressPage() {
   const [notice, setNotice] = useState("");
   const [plan, setPlan] = useState(null);
+  const courseProgress = useCourseProgress();
   const summary = useSummary();
   const topics = useTopics();
   const path = useLearningPath();
   const trend = useTrend();
   const history = useHistory();
-  const queries = [summary, topics, path, trend, history];
+  const queries = [courseProgress, summary, topics, path, trend, history];
   const planMutation = useMutation({
     mutationFn: () => apiPost("/progress/ai-plan", {}),
     onSuccess: ({ plan: nextPlan }) => {
@@ -72,6 +74,9 @@ export default function ProgressPage() {
       : "",
   }));
   const learningPath = path.data?.path ?? [];
+  const completedCourses = (courseProgress.data?.courses ?? []).filter(
+    (course) => course.total > 0 && course.completed === course.total
+  );
 
   return (
     <AppShell activePage="My Progress">
@@ -87,6 +92,42 @@ export default function ProgressPage() {
             <p className="mt-3 text-3xl font-bold">{value}</p>
           </div>
         ))}
+      </section>
+
+      <section className={`${cardClass} mb-6`}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Completed courses</h2>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+            {completedCourses.length} completed
+          </span>
+        </div>
+        {completedCourses.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-500">
+            Courses will appear here after you complete every lesson.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {completedCourses.map((course) => (
+              <article
+                className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4"
+                key={course.courseId}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold">{course.title}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{course.category}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    Complete
+                  </span>
+                </div>
+                <p className="mt-3 text-xs text-slate-500">
+                  {course.completed} of {course.total} lessons completed
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -121,7 +162,12 @@ export default function ProgressPage() {
         </section>
 
         <section className={cardClass}>
-          <h2 className="mb-5 text-lg font-bold">Topic performance</h2>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold">Assessment topic performance</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Based on submitted assessments; course completion is tracked separately.
+            </p>
+          </div>
           {(topics.data?.topics ?? []).length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500">
               Complete an assessment to see topic performance.

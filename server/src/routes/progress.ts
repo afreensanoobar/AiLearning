@@ -104,31 +104,40 @@ export function createProgressRouter(
       const userId = res.locals.auth?.userId;
       const [courses, lessons, progress] = await Promise.all([
         Course.find().sort({ order: 1 }).lean(),
-        Lesson.find().select("courseId").lean(),
+        Lesson.find().select("_id courseId").lean(),
         UserProgress.find({ userId }).lean(),
       ]);
 
-      const totals = new Map<string, number>();
+      const lessonIdsByCourse = new Map<string, string[]>();
       for (const lesson of lessons) {
         const courseId = lesson.courseId.toString();
-        totals.set(courseId, (totals.get(courseId) ?? 0) + 1);
+        const lessonIds = lessonIdsByCourse.get(courseId) ?? [];
+        lessonIds.push(lesson._id.toString());
+        lessonIdsByCourse.set(courseId, lessonIds);
       }
 
       const completedByCourse = new Map(
-        progress.map((item) => [item.courseId.toString(), item.completedLessonIds.length])
+        progress.map((item) => [
+          item.courseId.toString(),
+          new Set(item.completedLessonIds.map((id) => id.toString())),
+        ])
       );
 
       res.json({
         courses: courses.map((course) => {
-          const total = totals.get(course._id.toString()) ?? 0;
-          const completed = completedByCourse.get(course._id.toString()) ?? 0;
+          const courseId = course._id.toString();
+          const lessonIds = lessonIdsByCourse.get(courseId) ?? [];
+          const completedLessonIds = lessonIds.filter((lessonId) =>
+            completedByCourse.get(courseId)?.has(lessonId)
+          );
+          const total = lessonIds.length;
+          const completed = completedLessonIds.length;
           return {
             courseId: course._id,
             slug: course.slug,
-            completedLessonIds:
-              progress
-                .find((item) => item.courseId.toString() === course._id.toString())
-                ?.completedLessonIds.map((id) => id.toString()) ?? [],
+            title: course.title,
+            category: course.category,
+            completedLessonIds,
             completed,
             total,
             percentage: total === 0 ? 0 : Math.round((completed / total) * 100),

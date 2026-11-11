@@ -22,11 +22,21 @@ export default function AdminCourseDetailPage() {
     queryKey: ["admin", "courses", id],
     queryFn: () => apiRequest(`/admin/courses/${id}`),
   });
+  const refreshCourseData = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "courses"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin", "courses", id] });
+    void queryClient.invalidateQueries({ queryKey: ["courses"] });
+    if (details.data?.course.slug) {
+      void queryClient.invalidateQueries({
+        queryKey: ["courses", details.data.course.slug],
+      });
+    }
+  };
   const saveCourse = useMutation({
     mutationFn: (body) => apiPatch(`/admin/courses/${id}`, body),
     onSuccess: () => {
       setNotice("Course updated.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "courses"] });
+      refreshCourseData();
     },
     onError: (error) => setNotice(error.message),
   });
@@ -35,7 +45,7 @@ export default function AdminCourseDetailPage() {
     onSuccess: () => {
       setLessonForm({ title: "", content: "", estimatedMinutes: 10 });
       setNotice("Lesson added.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "courses", id] });
+      refreshCourseData();
     },
     onError: (error) => setNotice(error.message),
   });
@@ -43,7 +53,7 @@ export default function AdminCourseDetailPage() {
     mutationFn: ({ lessonId, body }) => apiPatch(`/admin/lessons/${lessonId}`, body),
     onSuccess: () => {
       setNotice("Lesson updated.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "courses", id] });
+      refreshCourseData();
     },
     onError: (error) => setNotice(error.message),
   });
@@ -51,7 +61,7 @@ export default function AdminCourseDetailPage() {
     mutationFn: (lessonId) => apiDelete(`/admin/lessons/${lessonId}`),
     onSuccess: () => {
       setNotice("Lesson deleted.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "courses", id] });
+      refreshCourseData();
     },
     onError: (error) => setNotice(error.message),
   });
@@ -60,7 +70,7 @@ export default function AdminCourseDetailPage() {
       apiPost(`/admin/courses/${id}/lessons/reorder`, { lessonIds }),
     onSuccess: () => {
       setNotice("Lesson order saved.");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "courses", id] });
+      refreshCourseData();
     },
     onError: (error) => setNotice(error.message),
   });
@@ -107,6 +117,12 @@ export default function AdminCourseDetailPage() {
             title: data.get("title"),
             slug: data.get("slug"),
             category: data.get("category"),
+            description: data.get("description"),
+            level: data.get("level"),
+            skills: String(data.get("skills") ?? "")
+              .split(/[\n,]/)
+              .map((skill) => skill.trim())
+              .filter(Boolean),
             order: Number(data.get("order")),
             ui: course.ui,
           });
@@ -132,6 +148,19 @@ export default function AdminCourseDetailPage() {
             />
           </label>
           <label className="text-sm font-medium">
+            Experience level
+            <select
+              className={inputClass}
+              name="level"
+              defaultValue={course.level ?? "Beginner"}
+              required
+            >
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </label>
+          <label className="text-sm font-medium">
             Order
             <input
               className={inputClass}
@@ -140,6 +169,24 @@ export default function AdminCourseDetailPage() {
               min="0"
               defaultValue={course.order}
               required
+            />
+          </label>
+          <label className="text-sm font-medium sm:col-span-2">
+            Description
+            <textarea
+              className={`${inputClass} min-h-24`}
+              name="description"
+              maxLength={2000}
+              defaultValue={course.description ?? ""}
+            />
+          </label>
+          <label className="text-sm font-medium sm:col-span-2">
+            Skills
+            <input
+              className={inputClass}
+              name="skills"
+              defaultValue={(course.skills ?? []).join(", ")}
+              placeholder="Separate skills with commas"
             />
           </label>
         </div>
@@ -207,6 +254,14 @@ export default function AdminCourseDetailPage() {
       </form>
 
       <section className="space-y-3">
+        <h2 className="text-lg font-bold">Lessons ({lessons.length})</h2>
+        {lessons.length === 0 && (
+          <div className={cardClass}>
+            <p className="text-sm text-slate-600">
+              This course has no lessons yet. Add the first lesson using the form above.
+            </p>
+          </div>
+        )}
         {lessons.map((lesson, index) => (
           <article className={cardClass} key={lesson.id}>
             <form

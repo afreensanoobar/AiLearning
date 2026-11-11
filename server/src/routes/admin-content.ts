@@ -27,6 +27,9 @@ const courseBody = z.object({
   slug: z.string().trim().toLowerCase().regex(slugPattern),
   title: z.string().trim().min(1).max(120),
   category: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(2000).optional(),
+  level: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
+  skills: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
   order: z.number().int().min(0),
   ui: uiSchema,
 });
@@ -74,6 +77,9 @@ function serializeCourse(course: {
   slug: string;
   title: string;
   category: string;
+  description?: string;
+  level?: "Beginner" | "Intermediate" | "Advanced";
+  skills?: string[];
   order: number;
   ui: { color: string; bg: string; icon: string; iconColor: string };
 }) {
@@ -82,6 +88,9 @@ function serializeCourse(course: {
     slug: course.slug,
     title: course.title,
     category: course.category,
+    description: course.description ?? "",
+    level: course.level ?? "Beginner",
+    skills: course.skills ?? [],
     order: course.order,
     ui: course.ui,
   };
