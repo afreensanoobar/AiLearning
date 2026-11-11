@@ -103,6 +103,9 @@ test("admins can manage content, questions, users and stats", async (t) => {
       slug: "git-basics",
       title: "Git Basics",
       category: "Tools",
+      description: "Learn version control and collaborate on software projects.",
+      level: "Beginner",
+      skills: ["Git", "Branching", "GitHub"],
       order: 10,
       ui: {
         color: "#8b5cf6",
@@ -112,6 +115,12 @@ test("admins can manage content, questions, users and stats", async (t) => {
       },
     })
     .expect(201);
+  assert.equal(
+    createdCourse.body.course.description,
+    "Learn version control and collaborate on software projects."
+  );
+  assert.equal(createdCourse.body.course.level, "Beginner");
+  assert.deepEqual(createdCourse.body.course.skills, ["Git", "Branching", "GitHub"]);
   const courseId = createdCourse.body.course.id;
 
   const firstLesson = await admin

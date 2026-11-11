@@ -25,6 +25,7 @@ import { getLessonData } from "../lessonsData";
 import AppShell from "../layout/AppShell";
 import { useCourses } from "../hooks/useCourses";
 import { useCourseProgress } from "../hooks/useCourseProgress";
+import LessonAssessment from "../components/LessonAssessment";
 import { PageError, PageLoading, PageNotice } from "./PageState";
 
 const cardClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
@@ -594,6 +595,11 @@ export default function CoursesPage() {
                         ))}
                       </ul>
                     </section>
+
+                    <LessonAssessment
+                      lessonId={lesson._id}
+                      lessonMaterial={[notes, ...lessonInfo.keyPoints].join("\n")}
+                    />
 
                     <button
                       type="button"
