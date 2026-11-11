@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Bell,
@@ -40,6 +40,10 @@ export default function AppShell({ activePage, children }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+  const menuPanelRef = useRef(null);
+  const wasMenuOpen = useRef(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { data } = useCourses();
@@ -54,10 +58,48 @@ export default function AppShell({ activePage, children }) {
   );
   const menuItems = [
     ...navigation,
-    ...(user?.role === "admin"
-      ? [{ name: "Admin", path: "/admin", icon: Shield }]
-      : []),
+    ...(user?.role === "admin" ? [{ name: "Admin", path: "/admin", icon: Shield }] : []),
   ];
+
+  useEffect(() => {
+    if (!menuOpen) {
+      if (wasMenuOpen.current) menuButtonRef.current?.focus();
+      wasMenuOpen.current = false;
+      return undefined;
+    }
+
+    wasMenuOpen.current = true;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    menuPanelRef.current?.querySelector("button:not(:disabled)")?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const controls = menuPanelRef.current?.querySelectorAll(
+        "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled)"
+      );
+      if (!controls?.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   const navigateTo = (path) => {
     navigate(path);
@@ -67,20 +109,47 @@ export default function AppShell({ activePage, children }) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 lg:hidden">
-          <aside className="h-full w-72 bg-white p-6">
-            <button onClick={() => setMenuOpen(false)} className="mb-8">
-              <X />
-            </button>
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-[2px] lg:hidden"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setMenuOpen(false);
+          }}
+        >
+          <aside
+            ref={menuPanelRef}
+            id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Main navigation"
+            className="h-full w-[min(20rem,85vw)] border-r border-slate-200 bg-white p-5 shadow-2xl"
+          >
+            <div className="mb-8 flex items-center justify-between">
+              <span className="text-sm font-bold tracking-tight">LearnAI</span>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label="Close navigation"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100"
+              >
+                <X aria-hidden="true" size={20} />
+              </button>
+            </div>
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const selected = activePage === item.name;
               return (
                 <button
+                  type="button"
                   key={item.name}
                   onClick={() => navigateTo(item.path)}
-                  className="mb-3 flex w-full items-center gap-3 rounded-xl p-3 hover:bg-violet-50"
+                  aria-current={selected ? "page" : undefined}
+                  className={`mb-2 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                    selected
+                      ? "bg-violet-50 text-violet-800"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
                 >
-                  <Icon size={19} />
+                  <Icon aria-hidden="true" size={19} />
                   {item.name}
                 </button>
               );
@@ -90,94 +159,119 @@ export default function AppShell({ activePage, children }) {
       )}
 
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white p-6 lg:block">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="rounded-xl bg-violet-600 p-3 text-white">
-              <BrainCircuit size={25} />
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white/90 p-5 lg:flex">
+          <div className="mb-10 flex items-center gap-3 px-2">
+            <div className="rounded-xl bg-violet-600 p-2.5 text-white shadow-sm shadow-violet-200">
+              <BrainCircuit aria-hidden="true" size={22} />
             </div>
             <div>
-              <h1 className="text-lg font-bold">LearnAI</h1>
-              <p className="text-xs text-slate-400">Personalized Learning</p>
+              <p className="text-base font-bold tracking-tight">LearnAI</p>
+              <p className="text-xs text-slate-500">Learn at your pace</p>
             </div>
           </div>
 
-          <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Main Menu
+          <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            Learning
           </p>
-          <nav className="space-y-2">
+          <nav aria-label="Main navigation" className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const selected = activePage === item.name;
               return (
                 <button
+                  type="button"
                   key={item.name}
                   onClick={() => navigateTo(item.path)}
+                  aria-current={selected ? "page" : undefined}
                   className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
                     selected
-                      ? "bg-violet-600 text-white shadow-md shadow-violet-200"
-                      : "text-slate-500 hover:bg-violet-50 hover:text-violet-700"
+                      ? "bg-violet-50 text-violet-800"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-violet-700"
                   }`}
                 >
-                  <Icon size={19} />
+                  <Icon aria-hidden="true" size={19} />
                   {item.name}
                 </button>
               );
             })}
           </nav>
 
-          <div className="mt-12 rounded-2xl bg-violet-50 p-4">
-            <Sparkles className="mb-3 text-violet-600" size={24} />
-            <h3 className="font-semibold">AI Learning Assistant</h3>
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+          <div className="mt-auto rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
+            <Sparkles aria-hidden="true" className="mb-3 text-violet-600" size={22} />
+            <h3 className="text-sm font-semibold">Need a hand?</h3>
+            <p className="mt-2 text-xs leading-5 text-slate-600">
               Get personalized guidance and improve your learning.
             </p>
             <button
+              type="button"
               onClick={() => navigateTo("/tutor")}
-              className="mt-4 flex items-center gap-2 text-sm font-semibold text-violet-700"
+              className="mt-4 flex min-h-11 items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
             >
-              Ask AI Tutor <ArrowUpRight size={16} />
+              Ask AI Tutor <ArrowUpRight aria-hidden="true" size={16} />
             </button>
           </div>
 
           <button
+            type="button"
             onClick={() => navigateTo("/settings")}
-            className="mt-10 flex items-center gap-3 text-sm text-slate-500 hover:text-violet-700"
+            aria-current={activePage === "Settings" ? "page" : undefined}
+            className="mt-4 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-violet-700"
           >
-            <Settings size={19} /> Settings
+            <Settings aria-hidden="true" size={19} /> Settings
           </button>
         </aside>
 
-        <main className="min-w-0 flex-1 p-5 sm:p-8 lg:p-10">
-          <header className="mb-9 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <button className="lg:hidden" onClick={() => setMenuOpen(true)}>
-                <Menu size={24} />
+        <main className="min-w-0 flex-1 px-4 py-5 sm:px-7 sm:py-7 lg:px-10 lg:py-9">
+          <header className="mb-8 flex items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                ref={menuButtonRef}
+                type="button"
+                aria-label="Open navigation"
+                aria-expanded={menuOpen}
+                aria-controls="mobile-navigation"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 lg:hidden"
+                onClick={() => setMenuOpen(true)}
+              >
+                <Menu aria-hidden="true" size={20} />
               </button>
-              <div>
-                <h2 className="text-2xl font-bold">
-                  {activePage === "Dashboard" ? "Dashboard" : activePage}
-                </h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Welcome back! Continue your learning journey.
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-violet-700">
+                  {activePage}
                 </p>
+                <h2 className="mt-1 max-w-[calc(100vw-13rem)] truncate text-xl font-bold tracking-tight text-slate-800 sm:max-w-none sm:text-2xl">
+                  {activePage === "Dashboard"
+                    ? `Welcome back, ${user?.name?.split(" ")[0] || "learner"}`
+                    : activePage}
+                </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <div className="relative">
                 <button
+                  type="button"
                   aria-label="Search courses"
+                  aria-controls="course-search-panel"
                   onClick={() => {
                     setSearchOpen(!searchOpen);
                     setSearchQuery("");
                   }}
-                  className="rounded-xl border border-slate-200 bg-white p-3"
+                  aria-expanded={searchOpen}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
                 >
-                  <Search size={19} />
+                  <Search aria-hidden="true" size={19} />
                 </button>
                 {searchOpen && (
-                  <div className="absolute right-0 top-14 z-50 w-72 rounded-xl border bg-white p-3 shadow-xl">
+                  <div
+                    id="course-search-panel"
+                    className="absolute right-0 top-14 z-50 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
+                  >
+                    <label className="sr-only" htmlFor="course-search">
+                      Search courses
+                    </label>
                     <input
+                      id="course-search"
                       type="text"
                       autoFocus
                       value={searchQuery}
@@ -212,15 +306,17 @@ export default function AppShell({ activePage, children }) {
 
               <div className="relative">
                 <button
+                  type="button"
                   aria-label="Notifications"
                   aria-expanded={notificationOpen}
+                  aria-controls="notifications-panel"
                   onClick={() => {
                     setNotificationOpen((open) => !open);
                     if (!notificationOpen) void notificationsQuery.refetch();
                   }}
-                  className="relative rounded-xl border border-slate-200 bg-white p-3"
+                  className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
                 >
-                  <Bell size={19} />
+                  <Bell aria-hidden="true" size={19} />
                   {unreadCount > 0 && (
                     <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                       {unreadCount > 99 ? "99+" : unreadCount}
@@ -228,7 +324,10 @@ export default function AppShell({ activePage, children }) {
                   )}
                 </button>
                 {notificationOpen && (
-                  <div className="absolute right-0 top-14 z-50 w-80 max-w-[90vw] rounded-2xl border bg-white p-4 shadow-xl">
+                  <div
+                    id="notifications-panel"
+                    className="absolute right-0 top-14 z-50 w-80 max-w-[90vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+                  >
                     <div className="mb-4 flex items-center justify-between gap-2">
                       <h3 className="font-bold">Notifications</h3>
                       <button
@@ -294,32 +393,55 @@ export default function AppShell({ activePage, children }) {
                 )}
               </div>
 
-              <div className="relative group">
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setAccountOpen(false);
+                  }
+                }}
+              >
                 <button
+                  type="button"
                   aria-label="Account menu"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 font-bold text-violet-700"
+                  aria-expanded={accountOpen}
+                  aria-controls="account-menu"
+                  onClick={() => setAccountOpen((open) => !open)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 font-bold text-violet-800 transition hover:bg-violet-200"
                 >
                   {(user?.name || "A").charAt(0).toUpperCase()}
                 </button>
-                <div className="absolute right-0 top-12 z-50 hidden w-48 rounded-xl border bg-white p-2 shadow-lg group-hover:block">
-                  <p className="px-3 py-2 text-sm font-semibold">{user?.name}</p>
-                  <button
-                    onClick={() => navigateTo("/settings")}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-violet-50"
+                {accountOpen && (
+                  <div
+                    id="account-menu"
+                    className="absolute right-0 top-14 z-50 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
                   >
-                    Settings
-                  </button>
-                  <button
-                    onClick={() =>
-                      void logout().catch((error) =>
-                        console.error("Unable to log out:", error)
-                      )
-                    }
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                  >
-                    Logout
-                  </button>
-                </div>
+                    <p className="px-3 py-2 text-sm font-semibold text-slate-800">
+                      {user?.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        navigateTo("/settings");
+                      }}
+                      className="min-h-11 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-violet-50"
+                    >
+                      Settings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void logout()
+                          .then(() => setAccountOpen(false))
+                          .catch((error) => console.error("Unable to log out:", error))
+                      }
+                      className="min-h-11 w-full rounded-xl px-3 py-2 text-left text-sm text-red-700 transition hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </header>
