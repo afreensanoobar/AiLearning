@@ -12,6 +12,7 @@ import { logger } from "./lib/logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFoundHandler } from "./middleware/not-found.js";
 import { authRouter } from "./routes/auth.js";
+import { assessmentsRouter } from "./routes/assessments.js";
 import { coursesRouter } from "./routes/courses.js";
 import { lessonsRouter } from "./routes/lessons.js";
 import { progressRouter } from "./routes/progress.js";
@@ -51,6 +52,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/assessments", assessmentsRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/lessons", lessonsRouter);
 app.use("/api/progress", progressRouter);

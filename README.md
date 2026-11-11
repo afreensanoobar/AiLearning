@@ -27,6 +27,8 @@ Authenticated read endpoints are available at `GET /api/courses`, `GET /api/cour
 
 Lesson progress is stored per user and course. Use `GET /api/progress/courses` to read course percentages, `POST /api/lessons/:id/complete` to mark a lesson complete, and `DELETE /api/lessons/:id/complete` to undo it. These endpoints require the auth cookie.
 
+Assessments are created with `POST /api/assessments/start` and `{ "mode": "assessment" }` or `{ "mode": "challenge" }`. Save each selection with `PATCH /api/assessments/:id/answer`, then submit with `POST /api/assessments/:id/submit`. Correct answers and explanations are returned only after submission. Use `GET /api/assessments/history` and `GET /api/assessments/:id` to review attempts.
+
 ---
 
 ## Topics Covered
