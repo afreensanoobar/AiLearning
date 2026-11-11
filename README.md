@@ -35,6 +35,8 @@ The AI service layer is configured with `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`,
 
 The tutor API is available at `POST /api/tutor/sessions`, `GET /api/tutor/sessions`, `GET /api/tutor/sessions/:id`, and `DELETE /api/tutor/sessions/:id`. Send a message with `POST /api/tutor/sessions/:id/messages` and `{ "content": "Explain closures", "level": "Beginner" }`; the optional level overrides the signed-in user's current level for that reply. Messages stream as server-sent events, are saved to the user's session, and use a rule-based response if AI is unavailable. Tutor context is built on the server from the student's weakest topics and recent missed-question topics.
 
+For submitted attempts, `POST /api/assessments/:id/explain` with `{ "questionId": "..." }` explains only that student's incorrect answers. `POST /api/progress/ai-plan` generates a personalized seven-day plan from the current level and five most recent submitted attempts; it is cached until the next attempt is submitted. Admins can generate review drafts with `POST /api/admin/questions/generate` and `{ "topic": "HTML", "difficulty": "Beginner", "count": 5 }`. Generated questions are saved as drafts and are excluded from assessments until approved.
+
 ---
 
 ## Topics Covered

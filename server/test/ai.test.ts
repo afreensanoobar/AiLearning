@@ -147,6 +147,12 @@ test("AI gateway returns cached output without calling the provider again", asyn
   assert.equal((await gateway.generate("tutor", requestInput)).text, "cached response");
   assert.equal((await gateway.generate("tutor", requestInput)).text, "cached response");
   assert.equal(calls, 1);
+  assert.equal(
+    (await gateway.generate("explanation", requestInput, "stable-explanation-key")).text,
+    "cached response"
+  );
+  assert.equal(values.get("stable-explanation-key"), "cached response");
+  assert.equal(calls, 2);
 });
 
 test("AI rate limit is per authenticated user with a clear 429 response", async () => {

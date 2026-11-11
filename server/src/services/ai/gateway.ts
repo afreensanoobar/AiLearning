@@ -27,9 +27,13 @@ export function createAiGateway(
   cache: CacheStore = databaseCache
 ) {
   return {
-    async generate(feature: string, request: AiRequest): Promise<AiResult> {
+    async generate(
+      feature: string,
+      request: AiRequest,
+      cacheKey?: string
+    ): Promise<AiResult> {
       const startedAt = Date.now();
-      const key = createAiCacheKey(feature, request);
+      const key = cacheKey ?? createAiCacheKey(feature, request);
       let cached = false;
       let usage: AiResult["usage"];
       try {
