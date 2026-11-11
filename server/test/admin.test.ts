@@ -192,8 +192,8 @@ test("admins can manage content, questions, users and stats", async (t) => {
     (lesson: { title: string }) => lesson.title === "Introduction to HTML"
   );
   assert.ok(seededHtmlLesson);
-  assert.equal(seededHtmlLesson.videoId, "");
-  assert.equal(seededHtmlLesson.channel, "");
+  assert.equal(seededHtmlLesson.videoId, "kUMe1FH4CHE");
+  assert.equal(seededHtmlLesson.channel, "freeCodeCamp.org");
   assert.ok(seededHtmlLesson.content);
   assert.equal(seededHtmlLesson.keyPoints.length, 4);
   assert.deepEqual(

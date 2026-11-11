@@ -19,7 +19,12 @@ test("lesson notes cover every seeded lesson with complete beginner material", (
     );
     assert.match(material.content, /```[\s\S]+```/, `${key}: missing code example`);
     assert.ok(material.keyPoints.length >= 3 && material.keyPoints.length <= 4);
-    assert.equal(material.videoId, "");
-    assert.equal(material.channel, "");
+    assert.match(material.videoId, /^[A-Za-z0-9_-]{11}$/, `${key}: invalid video ID`);
+    assert.ok(material.channel.trim(), `${key}: missing channel`);
   }
+  assert.equal(
+    new Set(Object.values(lessonContent).map(({ videoId }) => videoId)).size,
+    expectedKeys.length,
+    "Each lesson should have its own video."
+  );
 });

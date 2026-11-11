@@ -5,7 +5,6 @@ export interface LessonContent {
   keyPoints: string[];
 }
 
-// TODO: add real video. Keep both values empty until a verified lecture is supplied.
 function lesson(content: string[], keyPoints: string[]): LessonContent {
   return {
     videoId: "",
@@ -19,7 +18,7 @@ export function lessonContentKey(courseSlug: string, title: string) {
   return `${courseSlug}::${title}`;
 }
 
-export const lessonContent: Record<string, LessonContent> = {
+const lessonMaterials: Record<string, LessonContent> = {
   "html-fundamentals::Introduction to HTML": lesson(
     [
       "HTML, or HyperText Markup Language, gives a browser the structure and meaning of a web page. It describes headings, paragraphs, links, lists, and forms; CSS controls appearance, while JavaScript adds behavior. A browser reads the document and builds a tree of elements called the DOM. Most elements use an opening tag, content, and a closing tag, although some, such as `img`, are void elements.",
@@ -861,3 +860,256 @@ export const lessonContent: Record<string, LessonContent> = {
     ]
   ),
 };
+
+const lessonVideos: Record<string, Pick<LessonContent, "videoId" | "channel">> = {
+  "html-fundamentals::Introduction to HTML": {
+    videoId: "kUMe1FH4CHE",
+    channel: "freeCodeCamp.org",
+  },
+  "html-fundamentals::HTML Elements and Tags": {
+    videoId: "vIoO52MdZFE",
+    channel: "w3schools.com",
+  },
+  "html-fundamentals::HTML Attributes": {
+    videoId: "yMX901oVtn8",
+    channel: "w3schools.com",
+  },
+  "html-fundamentals::HTML Forms and Input Elements": {
+    videoId: "frAGrGN00OA",
+    channel: "Dave Gray",
+  },
+  "html-fundamentals::HTML Tables and Semantic Elements": {
+    videoId: "S6f6DUNqNnk",
+    channel: "Code Ki Pathshala",
+  },
+  "css-fundamentals::Introduction to CSS": {
+    videoId: "0W6qz0-aDaM",
+    channel: "Dave Gray",
+  },
+  "css-fundamentals::CSS Selectors": {
+    videoId: "QgxkYbGr2II",
+    channel: "Dave Gray",
+  },
+  "css-fundamentals::Colors and Backgrounds": {
+    videoId: "KGhfj9zsfPA",
+    channel: "Code With Shariq",
+  },
+  "css-fundamentals::Flexbox and Grid": {
+    videoId: "aEj6k-gi9-s",
+    channel: "Coding2GO",
+  },
+  "css-fundamentals::Responsive Web Design": {
+    videoId: "srvUrASNj0s",
+    channel: "freeCodeCamp.org",
+  },
+  "javascript::Introduction to JavaScript": {
+    videoId: "zofMnllkVfI",
+    channel: "w3schools.com",
+  },
+  "javascript::Variables and Data Types": {
+    videoId: "7qpE9rjfDXo",
+    channel: "Learndev",
+  },
+  "javascript::Functions and Scope": {
+    videoId: "gXoZcNMiT8M",
+    channel: "SKILL MADE EASY",
+  },
+  "javascript::DOM Manipulation": {
+    videoId: "5fb2aPlgoys",
+    channel: "freeCodeCamp.org",
+  },
+  "javascript::Events and Event Handling": {
+    videoId: "YiOlaiscqDY",
+    channel: "dcode",
+  },
+  "react-development::Introduction to React": {
+    videoId: "SqcY0GlETPk",
+    channel: "Programming with Mosh",
+  },
+  "react-development::Components and JSX": {
+    videoId: "S4VH8hddg8c",
+    channel: "CodeWithHarry",
+  },
+  "react-development::Props and State": {
+    videoId: "uUbTd-lALjc",
+    channel: "Sofia Goyal",
+  },
+  "react-development::React Hooks": {
+    videoId: "4Ak2jFEIr9o",
+    channel: "RoadsideCoder",
+  },
+  "react-development::React Router": {
+    videoId: "59IXY5IDrBA",
+    channel: "freeCodeCamp.org",
+  },
+  "typescript-essentials::Why TypeScript": {
+    videoId: "PF5SrWbQ8nY",
+    channel: "Tech With Tim",
+  },
+  "typescript-essentials::Primitive and Union Types": {
+    videoId: "qbczHkJqppU",
+    channel: "Project Brackets",
+  },
+  "typescript-essentials::Objects and Interfaces": {
+    videoId: "vTy881CvEgM",
+    channel: "DanCanCode",
+  },
+  "typescript-essentials::Typed Functions": {
+    videoId: "s7kyOtFF120",
+    channel: "Dave Gray",
+  },
+  "typescript-essentials::Generics and Narrowing": {
+    videoId: "DTR2p7D6tjk",
+    channel: "RoadsideCoder",
+  },
+  "node-express-apis::Node.js Runtime": {
+    videoId: "ohIAiuHMKMI",
+    channel: "Piyush Garg",
+  },
+  "node-express-apis::Express Routes": {
+    videoId: "Zh7psmf1KAA",
+    channel: "Dave Gray",
+  },
+  "node-express-apis::Request and Response": {
+    videoId: "SksvlZM-5Sk",
+    channel: "CodeWithHarry",
+  },
+  "node-express-apis::Middleware and Validation": {
+    videoId: "b6UUH3V3llg",
+    channel: "CodingHunger",
+  },
+  "node-express-apis::Designing REST Endpoints": {
+    videoId: "pKd0Rpw7O48",
+    channel: "Programming with Mosh",
+  },
+  "python-programming::Python Setup and Syntax": {
+    videoId: "rfscVS0vtbw",
+    channel: "freeCodeCamp.org",
+  },
+  "python-programming::Variables and Data Types": {
+    videoId: "WbPf4MCIo_U",
+    channel: "edureka!",
+  },
+  "python-programming::Conditions and Loops": {
+    videoId: "9XbeXpKMR_E",
+    channel: "Data with Baraa",
+  },
+  "python-programming::Functions and Modules": {
+    videoId: "08S2oNveLVE",
+    channel: "edureka!",
+  },
+  "python-programming::Lists and Dictionaries": {
+    videoId: "fXRxHrDhQuI",
+    channel: "Simplilearn",
+  },
+  "sql-databases::Relational Database Basics": {
+    videoId: "OqjJjpjDRLc",
+    channel: "IBM Technology",
+  },
+  "sql-databases::Selecting and Filtering Data": {
+    videoId: "TDKoTItCVMU",
+    channel: "Data with Baraa",
+  },
+  "sql-databases::Sorting and Aggregation": {
+    videoId: "zgYqUP_PhQo",
+    channel: "Alex The Analyst",
+  },
+  "sql-databases::Joining Tables": {
+    videoId: "aY7z4HcHm5M",
+    channel: "Data with Baraa",
+  },
+  "sql-databases::Tables and Relationships": {
+    videoId: "26ls5lNiijk",
+    channel: "freeCodeCamp.org",
+  },
+  "data-analytics-python::Working with Data": {
+    videoId: "vmEHCJofslg",
+    channel: "Keith Galli",
+  },
+  "data-analytics-python::Loading a Dataset": {
+    videoId: "-0NwrcZOKhQ",
+    channel: "codebasics",
+  },
+  "data-analytics-python::Cleaning Missing Values": {
+    videoId: "EaGbS7eWSs0",
+    channel: "codebasics",
+  },
+  "data-analytics-python::Summaries and Grouping": {
+    videoId: "VRmXto2YA2I",
+    channel: "Alex The Analyst",
+  },
+  "data-analytics-python::Communicating Insights": {
+    videoId: "r5_34YnCmMY",
+    channel: "Harvard Business Review",
+  },
+  "generative-ai-foundations::What Generative AI Can Do": {
+    videoId: "G2fqAlgmoPo",
+    channel: "Google Cloud Tech",
+  },
+  "generative-ai-foundations::Models, Tokens, and Context": {
+    videoId: "-QVoIxEpFkM",
+    channel: "IBM Technology",
+  },
+  "generative-ai-foundations::Writing Clear Prompts": {
+    videoId: "I0DBxnTlaMw",
+    channel: "Google Cloud Tech",
+  },
+  "generative-ai-foundations::Evaluating AI Responses": {
+    videoId: "imBL73lFwbk",
+    channel: "UDC Library",
+  },
+  "generative-ai-foundations::Responsible AI Use": {
+    videoId: "w_3L1Bf2P_g",
+    channel: "Google Cloud",
+  },
+  "git-github::Version Control Basics": {
+    videoId: "r8jQ9hVA2qs",
+    channel: "GitHub",
+  },
+  "git-github::Commits and Change History": {
+    videoId: "XfDbGgSwa5I",
+    channel: "GitKraken",
+  },
+  "git-github::Branches and Merging": {
+    videoId: "mS8oUqqc2G8",
+    channel: "GitKraken",
+  },
+  "git-github::Working with GitHub": {
+    videoId: "Ez8F0nW6S-w",
+    channel: "Apna College",
+  },
+  "git-github::Pull Requests and Reviews": {
+    videoId: "nCKdihvneS0",
+    channel: "GitHub",
+  },
+  "ui-ux-design::UX and UI Roles": {
+    videoId: "5CxXhyhT6Fc",
+    channel: "CareerFoundry",
+  },
+  "ui-ux-design::Understanding Users": {
+    videoId: "kQ_6faxhyIw",
+    channel: "Grow with Google",
+  },
+  "ui-ux-design::Mapping a User Journey": {
+    videoId: "L4E1yupkISI",
+    channel: "Figma",
+  },
+  "ui-ux-design::Wireframes and Hierarchy": {
+    videoId: "c9Wg6Cb_YlU",
+    channel: "freeCodeCamp.org",
+  },
+  "ui-ux-design::Usability and Iteration": {
+    videoId: "n8MnoJyl3W4",
+    channel: "NNgroup",
+  },
+};
+
+export const lessonContent: Record<string, LessonContent> = Object.fromEntries(
+  Object.entries(lessonMaterials).map(([key, material]) => {
+    const video = lessonVideos[key];
+    if (!video) {
+      throw new Error(`Missing video metadata for ${key}`);
+    }
+    return [key, { ...material, ...video }];
+  })
+);
