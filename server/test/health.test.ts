@@ -31,6 +31,10 @@ test("health reports a connected MongoDB database", async (t) => {
   process.env.PORT = String(port);
   process.env.MONGODB_URI = mongo.getUri();
   process.env.CLIENT_URL = "http://localhost:5173";
+  process.env.JWT_ACCESS_SECRET = "test_access_secret_that_is_at_least_32_chars";
+  process.env.JWT_REFRESH_SECRET = "test_refresh_secret_that_is_at_least_32_chars";
+  process.env.ACCESS_TOKEN_TTL = "15m";
+  process.env.REFRESH_TOKEN_TTL = "7d";
 
   const database = await import("../src/config/database.js");
   const { startServer } = await import("../src/server.js");
