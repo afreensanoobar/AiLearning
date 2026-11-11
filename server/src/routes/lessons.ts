@@ -7,6 +7,7 @@ import { HttpError } from "../middleware/http-error.js";
 import { validate } from "../middleware/validate.js";
 import { Lesson } from "../models/lesson.js";
 import { User } from "../models/user.js";
+import { UserActivity } from "../models/user-activity.js";
 import { UserProgress } from "../models/user-progress.js";
 
 const lessonIdSchema = z.object({
@@ -30,20 +31,33 @@ lessonsRouter.post(
       throw new HttpError(404, "LESSON_NOT_FOUND", "Lesson not found.");
     }
 
-    const userId = res.locals.auth?.userId;
-    const userResult = await User.updateOne(
-      { _id: userId },
-      { $set: { lastActiveAt: new Date() } }
-    );
-    if (userResult.matchedCount === 0) {
+    const userId = res.locals.auth!.userId;
+    if (!(await User.exists({ _id: userId }))) {
       throw new HttpError(401, "UNAUTHORIZED", "Authentication is required.");
     }
 
-    await UserProgress.findOneAndUpdate(
+    const completedAt = new Date();
+    const result = await UserProgress.updateOne(
       { userId, courseId: lesson.courseId },
-      { $addToSet: { completedLessonIds: lesson._id } },
-      { upsert: true, returnDocument: "after", runValidators: true }
+      {
+        $addToSet: { completedLessonIds: lesson._id },
+        $setOnInsert: { createdAt: completedAt, updatedAt: completedAt },
+      },
+      { upsert: true, runValidators: true, timestamps: false }
     );
+    if (result.modifiedCount > 0 || result.upsertedCount > 0) {
+      await Promise.all([
+        User.updateOne({ _id: userId }, { $set: { lastActiveAt: completedAt } }),
+        UserActivity.create({ userId, lessonId: lesson._id, occurredAt: completedAt }),
+      ]);
+      if (result.upsertedCount === 0) {
+        await UserProgress.updateOne(
+          { userId, courseId: lesson.courseId },
+          { $set: { updatedAt: completedAt } },
+          { timestamps: false }
+        );
+      }
+    }
     res.json({ completed: true });
   })
 );

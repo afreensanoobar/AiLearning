@@ -20,7 +20,13 @@ const profileSchema = z.object({
         .max(254)
         .transform((email) => email.toLowerCase())
         .optional(),
-      timezone: z.string().trim().min(1).max(100).optional(),
+      timezone: z
+        .string()
+        .trim()
+        .min(1)
+        .max(100)
+        .refine(isValidTimezone, "Must be a valid IANA timezone.")
+        .optional(),
     })
     .refine((body) => Object.keys(body).length > 0, {
       message: "At least one profile field must be provided.",
@@ -43,6 +49,15 @@ const passwordSchema = z.object({
       }),
   }),
 });
+
+function isValidTimezone(timezone: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type ProfileInput = z.infer<typeof profileSchema>["body"];
 type PasswordInput = z.infer<typeof passwordSchema>["body"];

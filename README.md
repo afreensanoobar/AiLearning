@@ -29,6 +29,8 @@ Lesson progress is stored per user and course. Use `GET /api/progress/courses` t
 
 Assessments are created with `POST /api/assessments/start` and `{ "mode": "assessment" }` or `{ "mode": "challenge" }`. Save each selection with `PATCH /api/assessments/:id/answer`, then submit with `POST /api/assessments/:id/submit`. Correct answers and explanations are returned only after submission. Use `GET /api/assessments/history` and `GET /api/assessments/:id` to review attempts.
 
+Progress analytics are available at `GET /api/progress/summary`, `/topics`, `/recommendations`, `/path`, and `/trend`. The summary uses the user's saved timezone to count today's assessments and activity streaks. Since older lesson progress did not store completion dates, streak history for lessons starts when timestamped activity tracking is introduced.
+
 ---
 
 ## Topics Covered
