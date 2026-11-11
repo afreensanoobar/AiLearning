@@ -31,6 +31,8 @@ Assessments are created with `POST /api/assessments/start` and `{ "mode": "asses
 
 Progress analytics are available at `GET /api/progress/summary`, `/topics`, `/recommendations`, `/path`, and `/trend`. The summary uses the user's saved timezone to count today's assessments and activity streaks. Since older lesson progress did not store completion dates, streak history for lessons starts when timestamped activity tracking is introduced.
 
+The AI service layer is configured with `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, and `AI_TIMEOUT_MS`. The key is optional while developing; AI requests return a clear unavailable error until it is configured. AI features use a shared Gemini provider, input guard, per-user rate limiter, and one-day response cache.
+
 ---
 
 ## Topics Covered
