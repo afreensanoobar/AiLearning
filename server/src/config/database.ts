@@ -8,11 +8,39 @@ function wait(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+let listenersAttached = false;
+
+function attachConnectionListeners() {
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  mongoose.connection.on("connected", () => {
+    logger.info("Mongoose connected to MongoDB");
+  });
+
+  mongoose.connection.on("disconnected", () => {
+    logger.warn("Mongoose disconnected from MongoDB");
+  });
+
+  mongoose.connection.on("reconnected", () => {
+    logger.info("Mongoose reconnected to MongoDB");
+  });
+
+  mongoose.connection.on("error", (error) => {
+    logger.error({ err: error }, "Mongoose connection encountered an error");
+  });
+}
+
 export async function connectToDatabase() {
+  attachConnectionListeners();
+
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
       await mongoose.connect(env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 15000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        heartbeatFrequencyMS: 10000,
       });
       logger.info("Connected to MongoDB");
       return;
