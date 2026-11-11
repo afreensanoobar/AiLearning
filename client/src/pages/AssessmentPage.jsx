@@ -64,6 +64,8 @@ export default function AssessmentPage() {
         queryClient.invalidateQueries({ queryKey: ["progress", "recommendations"] }),
         queryClient.invalidateQueries({ queryKey: ["assessments", "history"] }),
         queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+        queryClient.invalidateQueries({ queryKey: ["badges"] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
       ]);
     },
     onError: (error) => setNotice(error.message),

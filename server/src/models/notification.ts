@@ -5,6 +5,8 @@ interface NotificationFields {
   title: string;
   message: string;
   read: boolean;
+  eventKey?: string;
+  createdAt?: Date;
 }
 
 const notificationSchema = new Schema<NotificationFields>(
@@ -13,8 +15,14 @@ const notificationSchema = new Schema<NotificationFields>(
     title: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     read: { type: Boolean, default: false },
+    eventKey: { type: String, trim: true },
   },
   { timestamps: true }
+);
+
+notificationSchema.index(
+  { userId: 1, eventKey: 1 },
+  { unique: true, partialFilterExpression: { eventKey: { $type: "string" } } }
 );
 
 export const Notification = model<NotificationFields>("Notification", notificationSchema);

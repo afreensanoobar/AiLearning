@@ -67,6 +67,9 @@ export default function CoursesPage() {
       void queryClient.invalidateQueries({ queryKey: ["progress", "courses"] });
       void queryClient.invalidateQueries({ queryKey: ["progress", "summary"] });
       void queryClient.invalidateQueries({ queryKey: ["progress", "recommendations"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: ["badges"] });
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
   });
 

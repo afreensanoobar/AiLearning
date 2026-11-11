@@ -18,6 +18,7 @@ test("assessments persist answers, hide answer keys until submit, and gate chall
     { Notification },
     { Question },
     { User },
+    { UserBadge },
     { seedContent },
   ] = await Promise.all([
     import("../src/app.js"),
@@ -25,6 +26,7 @@ test("assessments persist answers, hide answer keys until submit, and gate chall
     import("../src/models/notification.js"),
     import("../src/models/question.js"),
     import("../src/models/user.js"),
+    import("../src/models/user-badge.js"),
     import("../src/content/seed.js"),
   ]);
   const { connectToDatabase, disconnectFromDatabase } =
@@ -111,7 +113,10 @@ test("assessments persist answers, hide answer keys until submit, and gate chall
         "correctAnswer" in question && "explanation" in question
     )
   );
-  assert.equal(await Notification.countDocuments(), 1);
+  assert.equal(await Notification.countDocuments(), 2);
+  assert.equal(await UserBadge.countDocuments({ badgeKey: "first-quiz" }), 1);
+  assert.equal(await UserBadge.countDocuments({ badgeKey: "perfect-score" }), 1);
+  assert.equal(await UserBadge.countDocuments({ badgeKey: "level-up" }), 1);
   await agent.post(`/api/assessments/${attempt.id}/submit`).expect(409);
 
   const user = await User.findOne({ email: "assessment@example.com" });

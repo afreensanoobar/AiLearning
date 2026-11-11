@@ -10,6 +10,8 @@ import {
   YAxis,
 } from "recharts";
 import { apiPost } from "../api/client";
+import BadgeCollection from "../components/BadgeCollection";
+import LeaderboardCard from "../components/LeaderboardCard";
 import { useHistory } from "../hooks/useHistory";
 import { useLearningPath } from "../hooks/useLearningPath";
 import { useSummary } from "../hooks/useSummary";
@@ -247,6 +249,10 @@ export default function ProgressPage() {
           </div>
         )}
       </section>
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <BadgeCollection />
+        <LeaderboardCard />
+      </div>
     </AppShell>
   );
 }

@@ -9,6 +9,7 @@ import { Lesson } from "../models/lesson.js";
 import { User } from "../models/user.js";
 import { UserActivity } from "../models/user-activity.js";
 import { UserProgress } from "../models/user-progress.js";
+import { awardBadge, recordStreakMilestones } from "../services/gamification.js";
 
 const lessonIdSchema = z.object({
   params: z.object({ id: z.string().regex(/^[a-f\d]{24}$/i) }),
@@ -50,6 +51,8 @@ lessonsRouter.post(
         User.updateOne({ _id: userId }, { $set: { lastActiveAt: completedAt } }),
         UserActivity.create({ userId, lessonId: lesson._id, occurredAt: completedAt }),
       ]);
+      await awardBadge(userId, "first-lesson");
+      await recordStreakMilestones(userId, completedAt);
       if (result.upsertedCount === 0) {
         await UserProgress.updateOne(
           { userId, courseId: lesson.courseId },

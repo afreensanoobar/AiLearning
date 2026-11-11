@@ -11,12 +11,16 @@ import { HttpError } from "../middleware/http-error.js";
 import { validate } from "../middleware/validate.js";
 import { AiStudyPlanCache } from "../models/ai-study-plan.js";
 import { Attempt } from "../models/attempt.js";
-import { Notification } from "../models/notification.js";
 import { Question } from "../models/question.js";
 import type { QuestionTopic } from "../models/question.js";
 import { User } from "../models/user.js";
 import type { LearningLevel } from "../models/user.js";
 import { createAiCacheKey } from "../services/ai/cache.js";
+import {
+  awardBadge,
+  createNotification,
+  recordStreakMilestones,
+} from "../services/gamification.js";
 import { ai } from "../services/ai/gateway.js";
 import type { AiRequest } from "../services/ai/provider.js";
 import { explainAnswerPrompt } from "../services/ai/prompts.js";
@@ -391,6 +395,10 @@ export function createAssessmentsRouter(
       const percentage = Math.round((score / attempt.total) * 100);
       const adaptive = calculateNextDifficulty(score, attempt.total, attempt.difficulty);
       const completedAt = new Date();
+      const previousSubmittedCount = await Attempt.countDocuments({
+        userId,
+        status: "submitted",
+      });
       const updated = await Attempt.updateOne(
         { _id: attempt._id, userId, status: "in_progress" },
         {
@@ -419,12 +427,66 @@ export function createAssessmentsRouter(
       if (attempt.type === "Assessment") userUpdate.currentLevel = adaptive.level;
       await User.updateOne({ _id: userId }, { $set: userUpdate });
       await AiStudyPlanCache.deleteOne({ userId });
-      await Notification.create({
+
+      const attemptKey = attempt._id.toString();
+      const awards: Promise<unknown>[] = [];
+      if (previousSubmittedCount === 0) awards.push(awardBadge(userId, "first-quiz"));
+      if (percentage === 100) awards.push(awardBadge(userId, "perfect-score"));
+      const levelOrder: LearningLevel[] = ["Beginner", "Intermediate", "Advanced"];
+      const leveledUp =
+        attempt.type === "Assessment" &&
+        levelOrder.indexOf(adaptive.level) > levelOrder.indexOf(attempt.difficulty);
+      if (leveledUp) awards.push(awardBadge(userId, "level-up"));
+      const passedChallenge = attempt.type === "Advanced Challenge" && percentage === 100;
+      const masteredChallenge = passedChallenge && attempt.challengeStage === 3;
+      if (masteredChallenge) awards.push(awardBadge(userId, "challenge-master"));
+      await Promise.all(awards);
+
+      await createNotification(
         userId,
-        title:
-          attempt.type === "Assessment" ? "Assessment completed" : "Challenge completed",
-        message: `${attempt.type} completed: ${percentage}%`,
-      });
+        attempt.type === "Assessment"
+          ? "Assessment completed"
+          : `Challenge stage ${attempt.challengeStage} completed`,
+        `${attempt.type} completed: ${percentage}%`,
+        `attempt-${attemptKey}-completed`
+      );
+      if (leveledUp) {
+        await createNotification(
+          userId,
+          "Level up",
+          `You have advanced to ${adaptive.level}.`,
+          `attempt-${attemptKey}-level-up`
+        );
+      }
+      if (
+        attempt.type === "Assessment" &&
+        attempt.difficulty === "Advanced" &&
+        percentage === 100
+      ) {
+        await createNotification(
+          userId,
+          "Advanced challenge unlocked",
+          "A perfect Advanced assessment unlocked the challenge.",
+          `attempt-${attemptKey}-challenge-unlocked`
+        );
+      }
+      if (passedChallenge && attempt.challengeStage! < 3) {
+        await createNotification(
+          userId,
+          "Challenge stage unlocked",
+          `Challenge stage ${attempt.challengeStage! + 1} is ready.`,
+          `attempt-${attemptKey}-next-stage`
+        );
+      }
+      if (masteredChallenge) {
+        await createNotification(
+          userId,
+          "Challenge completed",
+          "You mastered all advanced challenge stages.",
+          `attempt-${attemptKey}-challenge-mastered`
+        );
+      }
+      await recordStreakMilestones(userId, completedAt);
 
       const submittedAttempt = await Attempt.findById(attempt._id);
       res.json({ attempt: await attemptPayload(submittedAttempt!) });

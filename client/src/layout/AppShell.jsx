@@ -16,6 +16,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { useCourses } from "../hooks/useCourses";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from "../hooks/useNotifications";
 
 const navigation = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -37,6 +42,11 @@ export default function AppShell({ activePage, children }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { data } = useCourses();
+  const notificationsQuery = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const notifications = notificationsQuery.data?.notifications ?? [];
+  const unreadCount = notificationsQuery.data?.unreadCount ?? 0;
   const courses = data?.courses ?? [];
   const matches = courses.filter((course) =>
     course.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
@@ -196,17 +206,83 @@ export default function AppShell({ activePage, children }) {
               <div className="relative">
                 <button
                   aria-label="Notifications"
-                  onClick={() => setNotificationOpen(!notificationOpen)}
+                  aria-expanded={notificationOpen}
+                  onClick={() => {
+                    setNotificationOpen((open) => !open);
+                    if (!notificationOpen) void notificationsQuery.refetch();
+                  }}
                   className="relative rounded-xl border border-slate-200 bg-white p-3"
                 >
                   <Bell size={19} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </button>
                 {notificationOpen && (
                   <div className="absolute right-0 top-14 z-50 w-80 max-w-[90vw] rounded-2xl border bg-white p-4 shadow-xl">
-                    <h3 className="mb-4 font-bold">Notifications</h3>
-                    <p className="py-5 text-center text-sm text-slate-500">
-                      No notifications yet.
-                    </p>
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                      <h3 className="font-bold">Notifications</h3>
+                      <button
+                        type="button"
+                        disabled={unreadCount === 0 || markAllRead.isPending}
+                        onClick={() => markAllRead.mutate()}
+                        className="text-xs font-semibold text-violet-700 disabled:text-slate-400"
+                      >
+                        Mark all read
+                      </button>
+                    </div>
+                    {(markRead.error || markAllRead.error) && (
+                      <p role="alert" className="mb-3 text-xs text-red-700">
+                        {(markRead.error || markAllRead.error).message}
+                      </p>
+                    )}
+                    {notificationsQuery.isPending ? (
+                      <p
+                        role="status"
+                        className="py-5 text-center text-sm text-slate-500"
+                      >
+                        Loading notifications...
+                      </p>
+                    ) : notificationsQuery.isError ? (
+                      <p role="alert" className="py-5 text-center text-sm text-red-700">
+                        {notificationsQuery.error.message}
+                      </p>
+                    ) : notifications.length === 0 ? (
+                      <p className="py-5 text-center text-sm text-slate-500">
+                        No notifications yet.
+                      </p>
+                    ) : (
+                      <div className="max-h-80 space-y-2 overflow-y-auto">
+                        {notifications.map((notification) => (
+                          <button
+                            type="button"
+                            key={notification.id}
+                            disabled={notification.read || markRead.isPending}
+                            onClick={() => markRead.mutate(notification.id)}
+                            className={`w-full rounded-xl p-3 text-left ${
+                              notification.read ? "bg-white" : "bg-violet-50"
+                            }`}
+                          >
+                            <span className="flex items-start justify-between gap-2">
+                              <span className="text-sm font-semibold">
+                                {notification.title}
+                              </span>
+                              {!notification.read && (
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-violet-600" />
+                              )}
+                            </span>
+                            <span className="mt-1 block text-xs text-slate-500">
+                              {notification.message}
+                            </span>
+                            <span className="mt-2 block text-[10px] text-slate-400">
+                              {new Date(notification.createdAt).toLocaleString()}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

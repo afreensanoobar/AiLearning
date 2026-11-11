@@ -63,6 +63,7 @@ function publicUser(user: {
   role: UserRole;
   currentLevel: LearningLevel;
   timezone: string;
+  showOnLeaderboard: boolean;
   createdAt: Date;
   lastActiveAt: Date;
 }) {
@@ -73,6 +74,7 @@ function publicUser(user: {
     role: user.role,
     currentLevel: user.currentLevel,
     timezone: user.timezone,
+    showOnLeaderboard: user.showOnLeaderboard,
     createdAt: user.createdAt,
     lastActiveAt: user.lastActiveAt,
   };

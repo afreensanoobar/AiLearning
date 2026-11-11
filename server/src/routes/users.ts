@@ -9,7 +9,9 @@ import { validate } from "../middleware/validate.js";
 import { AiStudyPlanCache } from "../models/ai-study-plan.js";
 import { Attempt } from "../models/attempt.js";
 import { ChatSession } from "../models/chat-session.js";
+import { Notification } from "../models/notification.js";
 import { UserActivity } from "../models/user-activity.js";
+import { UserBadge } from "../models/user-badge.js";
 import { User } from "../models/user.js";
 import { UserProgress } from "../models/user-progress.js";
 import type { UserRole, LearningLevel } from "../models/user.js";
@@ -32,6 +34,7 @@ const profileSchema = z.object({
         .max(100)
         .refine(isValidTimezone, "Must be a valid IANA timezone.")
         .optional(),
+      showOnLeaderboard: z.boolean().optional(),
     })
     .refine((body) => Object.keys(body).length > 0, {
       message: "At least one profile field must be provided.",
@@ -78,6 +81,7 @@ function publicUser(user: {
   role: UserRole;
   currentLevel: LearningLevel;
   timezone: string;
+  showOnLeaderboard: boolean;
   createdAt: Date;
   lastActiveAt: Date;
 }) {
@@ -88,6 +92,7 @@ function publicUser(user: {
     role: user.role,
     currentLevel: user.currentLevel,
     timezone: user.timezone,
+    showOnLeaderboard: user.showOnLeaderboard,
     createdAt: user.createdAt,
     lastActiveAt: user.lastActiveAt,
   };
@@ -152,6 +157,8 @@ usersRouter.delete(
       ChatSession.deleteMany({ userId }),
       UserActivity.deleteMany({ userId }),
       AiStudyPlanCache.deleteMany({ userId }),
+      Notification.deleteMany({ userId }),
+      UserBadge.deleteMany({ userId }),
     ]);
     res.json({ message: "Progress data cleared successfully." });
   })

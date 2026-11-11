@@ -52,6 +52,7 @@ test("cookie JWT authentication, profile and password flows", async (t) => {
   assert.equal(registration.body.user.email, "ada@example.com");
   assert.equal(registration.body.user.role, "student");
   assert.equal(registration.body.user.currentLevel, "Beginner");
+  assert.equal(registration.body.user.showOnLeaderboard, true);
   assert.equal("accessToken" in registration.body, false);
   assert.deepEqual(
     Object.keys(registration.body.user).sort(),
@@ -63,6 +64,7 @@ test("cookie JWT authentication, profile and password flows", async (t) => {
       "lastActiveAt",
       "name",
       "role",
+      "showOnLeaderboard",
       "timezone",
     ].sort()
   );

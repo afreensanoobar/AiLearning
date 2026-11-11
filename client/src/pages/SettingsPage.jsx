@@ -25,7 +25,7 @@ export default function SettingsPage() {
     mutationFn: (body) =>
       apiRequest("/users/me", { method: "PATCH", body: JSON.stringify(body) }),
     onSuccess: ({ user }) => {
-      setProfile({ name: user.name, email: user.email, timezone: user.timezone });
+      setProfile(user);
       setUser(user);
       setNotice("Profile updated.");
       void queryClient.invalidateQueries({ queryKey: ["users", "me"] });
@@ -50,6 +50,8 @@ export default function SettingsPage() {
         queryClient.invalidateQueries({ queryKey: ["assessments"] }),
         queryClient.invalidateQueries({ queryKey: ["tutor"] }),
         queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+        queryClient.invalidateQueries({ queryKey: ["badges"] }),
+        queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
       ]);
     },
     onError: (error) => setNotice(error.message),
@@ -127,6 +129,20 @@ export default function SettingsPage() {
                   setProfile({ ...profileValues, timezone: event.target.value })
                 }
               />
+            </label>
+            <label className="flex items-center gap-3 text-sm font-medium sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={profileValues.showOnLeaderboard ?? true}
+                onChange={(event) =>
+                  setProfile({
+                    ...profileValues,
+                    showOnLeaderboard: event.target.checked,
+                  })
+                }
+                className="h-4 w-4 accent-violet-600"
+              />
+              Show my display name on the leaderboard
             </label>
           </div>
           <button

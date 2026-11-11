@@ -19,8 +19,10 @@ test("user profile and clear progress endpoints use authenticated user data", as
     { Attempt },
     { ChatSession },
     { Lesson },
+    { Notification },
     { User },
     { UserActivity },
+    { UserBadge },
     { UserProgress },
     { Course },
     { seedContent },
@@ -31,8 +33,10 @@ test("user profile and clear progress endpoints use authenticated user data", as
     import("../src/models/attempt.js"),
     import("../src/models/chat-session.js"),
     import("../src/models/lesson.js"),
+    import("../src/models/notification.js"),
     import("../src/models/user.js"),
     import("../src/models/user-activity.js"),
+    import("../src/models/user-badge.js"),
     import("../src/models/user-progress.js"),
     import("../src/models/course.js"),
     import("../src/content/seed.js"),
@@ -85,6 +89,12 @@ test("user profile and clear progress endpoints use authenticated user data", as
       messages: [],
     }),
     UserActivity.create({ userId: user._id, lessonId: lesson._id }),
+    Notification.create({
+      userId: user._id,
+      title: "Test",
+      message: "Test notification",
+    }),
+    UserBadge.create({ userId: user._id, badgeKey: "first-lesson" }),
     AiStudyPlanCache.create({
       userId: user._id,
       plan: {
@@ -108,4 +118,6 @@ test("user profile and clear progress endpoints use authenticated user data", as
   assert.equal(await ChatSession.countDocuments({ userId: user._id }), 0);
   assert.equal(await UserActivity.countDocuments({ userId: user._id }), 0);
   assert.equal(await AiStudyPlanCache.countDocuments({ userId: user._id }), 0);
+  assert.equal(await Notification.countDocuments({ userId: user._id }), 0);
+  assert.equal(await UserBadge.countDocuments({ userId: user._id }), 0);
 });

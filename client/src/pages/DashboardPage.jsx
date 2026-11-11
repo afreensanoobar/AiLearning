@@ -6,6 +6,8 @@ import { useCourseProgress } from "../hooks/useCourseProgress";
 import { useHistory } from "../hooks/useHistory";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { useSummary } from "../hooks/useSummary";
+import BadgeCollection from "../components/BadgeCollection";
+import LeaderboardCard from "../components/LeaderboardCard";
 import { PageError, PageLoading } from "./PageState";
 
 const cardClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
@@ -169,6 +171,10 @@ export default function DashboardPage() {
             Take an assessment
           </button>
         </section>
+      </div>
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <BadgeCollection />
+        <LeaderboardCard />
       </div>
     </AppShell>
   );

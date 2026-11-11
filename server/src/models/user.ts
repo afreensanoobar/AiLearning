@@ -10,6 +10,7 @@ interface UserFields {
   role: UserRole;
   currentLevel: LearningLevel;
   timezone: string;
+  showOnLeaderboard: boolean;
   lastActiveAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +41,7 @@ const userSchema = new Schema<UserFields>(
       required: true,
     },
     timezone: { type: String, trim: true, default: "UTC", maxlength: 100 },
+    showOnLeaderboard: { type: Boolean, default: true },
     lastActiveAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
