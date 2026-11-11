@@ -81,6 +81,8 @@ test("lesson completion is idempotent and course progress updates", async (t) =>
   const htmlProgress = updatedProgress.body.courses.find(
     (course: { slug: string }) => course.slug === "html-fundamentals"
   );
+  assert.equal(typeof htmlProgress.title, "string");
+  assert.equal(typeof htmlProgress.category, "string");
   assert.deepEqual(
     {
       completed: htmlProgress.completed,
@@ -89,6 +91,16 @@ test("lesson completion is idempotent and course progress updates", async (t) =>
     },
     { completed: 1, total: 5, percentage: 20 }
   );
+  await UserProgress.updateOne(
+    { userId: user._id, courseId: lesson.courseId },
+    { $addToSet: { completedLessonIds: "000000000000000000000001" } }
+  );
+  const progressWithStaleLesson = await agent.get("/api/progress/courses").expect(200);
+  const htmlProgressWithStaleLesson = progressWithStaleLesson.body.courses.find(
+    (course: { slug: string }) => course.slug === "html-fundamentals"
+  );
+  assert.deepEqual(htmlProgressWithStaleLesson.completedLessonIds, [lessonId]);
+  assert.equal(htmlProgressWithStaleLesson.completed, 1);
 
   await agent.delete(`/api/lessons/${lessonId}/complete`).expect(200, {
     completed: false,
