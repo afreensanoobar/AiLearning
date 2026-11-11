@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,11 +21,12 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiRequest } from "../api/client";
-import { getLessonData } from "../lessonsData";
 import AppShell from "../layout/AppShell";
 import { useCourses } from "../hooks/useCourses";
+import { useCourseDetails } from "../hooks/useCourseDetails";
 import { useCourseProgress } from "../hooks/useCourseProgress";
 import LessonAssessment from "../components/LessonAssessment";
+import MarkdownContent from "../components/MarkdownContent";
 import { PageError, PageLoading, PageNotice } from "./PageState";
 
 const cardClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
@@ -83,11 +84,7 @@ export default function CoursesPage() {
   const [activeLevel, setActiveLevel] = useState("All levels");
   const courses = useCourses();
   const progress = useCourseProgress();
-  const details = useQuery({
-    queryKey: ["courses", slug],
-    queryFn: () => apiRequest(`/courses/${slug}`),
-    enabled: Boolean(slug),
-  });
+  const details = useCourseDetails(slug);
 
   useEffect(() => {
     if (!slug || !details.data || !window.location.hash) return undefined;
@@ -215,8 +212,8 @@ export default function CoursesPage() {
                     Find your next skill
                   </h1>
                   <p className="mt-3 max-w-xl text-sm leading-6 text-violet-100 sm:text-base">
-                    Explore practical courses across web development, programming,
-                    data, AI, and design. Learn at your own pace, one lesson at a time.
+                    Explore practical courses across web development, programming, data,
+                    AI, and design. Learn at your own pace, one lesson at a time.
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-6 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
@@ -338,97 +335,97 @@ export default function CoursesPage() {
             ) : (
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {filteredCourses.map((course) => {
-              const item = progressByCourse.get(course._id);
-              const theme = categoryThemes[course.category] ?? {
-                Icon: BookOpen,
-                cover: "from-violet-500 to-indigo-800",
-              };
-              const CategoryIcon = theme.Icon;
-              const courseMetadata = [
-                course.lessonCount ? `${course.lessonCount} lessons` : null,
-                formatDuration(course.durationMinutes),
-              ].filter(Boolean);
-              return (
-                <article
-                  key={course._id}
-                  className={`${cardClass} flex flex-col gap-4 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md`}
-                >
-                  <div
-                    className={`relative flex min-h-32 items-end justify-between overflow-hidden rounded-xl bg-gradient-to-br ${theme.cover} p-4 text-white`}
-                  >
-                    <span className="absolute -right-4 -top-8 h-32 w-32 rounded-full border-[18px] border-white/10" />
-                    <span className="relative rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-                      {course.category}
-                    </span>
-                    <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
-                      <CategoryIcon aria-hidden="true" size={24} />
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
-                        {course.level ?? "Beginner"}
-                      </span>
-                      {courseMetadata.length > 0 && (
-                        <span className="text-xs text-slate-500">
-                          {courseMetadata.join(" · ")}
+                  const item = progressByCourse.get(course._id);
+                  const theme = categoryThemes[course.category] ?? {
+                    Icon: BookOpen,
+                    cover: "from-violet-500 to-indigo-800",
+                  };
+                  const CategoryIcon = theme.Icon;
+                  const courseMetadata = [
+                    course.lessonCount ? `${course.lessonCount} lessons` : null,
+                    formatDuration(course.durationMinutes),
+                  ].filter(Boolean);
+                  return (
+                    <article
+                      key={course._id}
+                      className={`${cardClass} flex flex-col gap-4 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md`}
+                    >
+                      <div
+                        className={`relative flex min-h-32 items-end justify-between overflow-hidden rounded-xl bg-gradient-to-br ${theme.cover} p-4 text-white`}
+                      >
+                        <span className="absolute -right-4 -top-8 h-32 w-32 rounded-full border-[18px] border-white/10" />
+                        <span className="relative rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+                          {course.category}
                         </span>
-                      )}
-                    </div>
-                    <h2 className="mt-3 text-lg font-bold tracking-tight text-slate-800">
-                      {course.title}
-                    </h2>
-                    <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600 line-clamp-2">
-                      {course.description ||
-                        `Build practical skills in ${course.category.toLowerCase()} with guided, self-paced lessons.`}
-                    </p>
-                    {course.skills?.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {course.skills.slice(0, 3).map((skill) => (
-                          <span
-                            key={skill}
-                            className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                        <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
+                          <CategoryIcon aria-hidden="true" size={24} />
+                        </span>
                       </div>
-                    )}
-                    {item?.completed > 0 && (
-                      <div className="mt-4">
-                        <div className="mb-1.5 flex justify-between text-xs text-slate-500">
-                          <span>
-                            {item.completed} of {item.total} lessons complete
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
+                            {course.level ?? "Beginner"}
                           </span>
-                          <span>{item.percentage}%</span>
+                          {courseMetadata.length > 0 && (
+                            <span className="text-xs text-slate-500">
+                              {courseMetadata.join(" · ")}
+                            </span>
+                          )}
                         </div>
-                        <div
-                          role="progressbar"
-                          aria-label={`${course.title} progress`}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={item.percentage}
-                          className="h-1.5 overflow-hidden rounded-full bg-slate-100"
-                        >
-                          <div
-                            className="h-full rounded-full bg-violet-600"
-                            style={{ width: `${item.percentage}%` }}
-                          />
-                        </div>
+                        <h2 className="mt-3 text-lg font-bold tracking-tight text-slate-800">
+                          {course.title}
+                        </h2>
+                        <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600 line-clamp-2">
+                          {course.description ||
+                            `Build practical skills in ${course.category.toLowerCase()} with guided, self-paced lessons.`}
+                        </p>
+                        {course.skills?.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {course.skills.slice(0, 3).map((skill) => (
+                              <span
+                                key={skill}
+                                className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {item?.completed > 0 && (
+                          <div className="mt-4">
+                            <div className="mb-1.5 flex justify-between text-xs text-slate-500">
+                              <span>
+                                {item.completed} of {item.total} lessons complete
+                              </span>
+                              <span>{item.percentage}%</span>
+                            </div>
+                            <div
+                              role="progressbar"
+                              aria-label={`${course.title} progress`}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={item.percentage}
+                              className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+                            >
+                              <div
+                                className="h-full rounded-full bg-violet-600"
+                                style={{ width: `${item.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/courses/${course.slug}`)}
-                    className="mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-800 transition hover:border-violet-700 hover:bg-violet-700 hover:text-white"
-                  >
-                    {item?.completed > 0 ? "Continue learning" : "Start learning"}
-                    <ArrowRight aria-hidden="true" size={16} />
-                  </button>
-                </article>
-              );
-            })}
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/courses/${course.slug}`)}
+                        className="mt-auto inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-800 transition hover:border-violet-700 hover:bg-violet-700 hover:text-white"
+                      >
+                        {item?.completed > 0 ? "Continue learning" : "Start learning"}
+                        <ArrowRight aria-hidden="true" size={16} />
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>
@@ -492,29 +489,12 @@ export default function CoursesPage() {
         <div className="space-y-4">
           {lessons.map((lesson) => {
             const completed = completedIds.has(lesson._id);
-            const lessonInfo = getLessonData(course.slug, lesson.title) ?? {
-              id: `${course.slug}-${lesson._id}`,
-              topic: course.category,
-              videoId: "VIDEO_ID_PLACEHOLDER",
-              channel: "CHANNEL_NAME_PLACEHOLDER",
-              notes: "NOTES_PLACEHOLDER",
-              keyPoints: [],
-            };
-            const hasVideoId =
-              /^[\w-]{11}$/.test(lessonInfo.videoId) &&
-              !lessonInfo.videoId.includes("PLACEHOLDER");
-            const notes =
-              lessonInfo.notes === "NOTES_PLACEHOLDER"
-                ? lesson.content
-                : lessonInfo.notes;
-            const channel =
-              lessonInfo.channel === "CHANNEL_NAME_PLACEHOLDER"
-                ? "YouTube channel to be added"
-                : lessonInfo.channel;
+            const keyPoints = lesson.keyPoints ?? [];
+            const hasVideoId = /^[A-Za-z0-9_-]{11}$/.test(lesson.videoId ?? "");
             return (
               <article
                 className={`${cardClass} scroll-mt-6`}
-                id={`lesson-${lessonInfo.id}`}
+                id={`lesson-${lesson._id}`}
                 key={lesson._id}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -544,7 +524,7 @@ export default function CoursesPage() {
                       {hasVideoId ? (
                         <div className="aspect-video overflow-hidden rounded-xl bg-slate-950">
                           <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(lessonInfo.videoId)}`}
+                            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(lesson.videoId)}`}
                             title={`${lesson.title} video`}
                             loading="lazy"
                             referrerPolicy="strict-origin-when-cross-origin"
@@ -564,48 +544,55 @@ export default function CoursesPage() {
                             YouTube lesson video
                           </p>
                           <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">
-                            Add this lesson&apos;s video ID in lessonsData.js to enable
-                            playback.
+                            A lecture video for this lesson is not available yet. You can
+                            still learn from the notes below.
                           </p>
                         </div>
                       )}
-                      <p className="mt-2 text-xs text-slate-500">
-                        Video credit: <span className="font-medium">{channel}</span>
-                      </p>
+                      {hasVideoId && lesson.channel && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          Lecture by <span className="font-medium">{lesson.channel}</span>
+                        </p>
+                      )}
+                      {hasVideoId && !lesson.channel && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          Lecture by channel not listed
+                        </p>
+                      )}
                     </div>
 
                     <section className="mt-4 rounded-xl bg-slate-50 p-4">
                       <h3 className="text-sm font-bold text-slate-800">Lesson notes</h3>
-                      <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-6 text-slate-600">
-                        {notes}
-                      </pre>
+                      <MarkdownContent className="mt-2">{lesson.content}</MarkdownContent>
                     </section>
 
-                    <section className="mt-4">
-                      <h3 className="text-sm font-bold text-slate-800">Key points</h3>
-                      <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-600">
-                        {lessonInfo.keyPoints.map((point) => (
-                          <li key={point} className="flex gap-2">
-                            <span
-                              aria-hidden="true"
-                              className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-600"
-                            />
-                            {point}
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
+                    {keyPoints.length > 0 && (
+                      <section className="mt-4">
+                        <h3 className="text-sm font-bold text-slate-800">Key points</h3>
+                        <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-600">
+                          {keyPoints.map((point) => (
+                            <li key={point} className="flex gap-2">
+                              <span
+                                aria-hidden="true"
+                                className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-600"
+                              />
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
 
                     <LessonAssessment
                       lessonId={lesson._id}
-                      lessonMaterial={[notes, ...lessonInfo.keyPoints].join("\n")}
+                      lessonMaterial={[lesson.content, ...keyPoints].join("\n")}
                     />
 
                     <button
                       type="button"
                       onClick={() =>
                         navigate(
-                          `/tutor?lessonId=${encodeURIComponent(lesson._id)}&lessonDataId=${encodeURIComponent(lessonInfo.id)}`
+                          `/tutor?lessonId=${encodeURIComponent(lesson._id)}&courseSlug=${encodeURIComponent(course.slug)}`
                         )
                       }
                       className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"

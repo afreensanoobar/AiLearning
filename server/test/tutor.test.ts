@@ -123,7 +123,7 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
     .send({
       lessonId: lesson.id,
       question: "Explain this lesson",
-      notes: "Notes supplied for the lesson.",
+      notes: "CLIENT_NOTES_MUST_BE_IGNORED",
     })
     .expect(200);
   assert.deepEqual(lessonReply.body, {
@@ -132,7 +132,11 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
   });
   assert.match(aiRequests[0]!.system, /Student level: Beginner/);
   assert.match(aiRequests[0]!.system, /Lesson: Introduction to HTML/);
-  assert.match(aiRequests[0]!.system, /Notes supplied for the lesson/);
+  assert.ok(aiRequests[0]!.system.includes(lesson.content.slice(0, 100)));
+  assert.doesNotMatch(aiRequests[0]!.system, /CLIENT_NOTES_MUST_BE_IGNORED/);
+  assert.ok(
+    lesson.keyPoints.every((point: string) => aiRequests[0]!.system.includes(point))
+  );
   assert.equal(aiRequests[0]!.messages.at(-1)?.content, "Explain this lesson");
 
   await student
@@ -202,12 +206,13 @@ test("tutor streams, personalizes, falls back by level, and enforces session own
     .send({
       lessonId: lesson.id,
       question: "Explain JavaScript closures",
-      notes: "Review lexical scope.",
+      notes: "CLIENT_NOTES_MUST_BE_IGNORED",
     })
     .expect(200);
   assert.equal(lessonFallback.body.fallback, true);
   assert.match(lessonFallback.body.answer, /inner function remembers variables/);
-  assert.match(lessonFallback.body.answer, /Review lexical scope/);
+  assert.ok(lessonFallback.body.answer.includes(lesson.content.slice(0, 100)));
+  assert.doesNotMatch(lessonFallback.body.answer, /CLIENT_NOTES_MUST_BE_IGNORED/);
 
   const beginner = await student
     .post(`/api/tutor-fallback/sessions/${fallbackSession._id}/messages`)

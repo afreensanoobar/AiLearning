@@ -42,11 +42,22 @@ const updateCourseSchema = z.object({
   }),
 });
 
+const videoIdSchema = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || /^[A-Za-z0-9_-]{11}$/.test(value), {
+    message: "Video ID must contain exactly 11 valid characters.",
+  });
+const keyPointsSchema = z.array(z.string().trim().min(1).max(200)).max(6);
+
 const createLessonSchema = z.object({
   body: z.object({
     courseId: objectId,
     title: z.string().trim().min(1).max(160),
     content: z.string().trim().min(1),
+    videoId: videoIdSchema.optional(),
+    channel: z.string().trim().max(100).optional(),
+    keyPoints: keyPointsSchema.optional(),
     estimatedMinutes: z.number().int().min(1).max(240),
     order: z.number().int().min(0).optional(),
   }),
@@ -58,6 +69,9 @@ const updateLessonSchema = z.object({
     .object({
       title: z.string().trim().min(1).max(160).optional(),
       content: z.string().trim().min(1).optional(),
+      videoId: videoIdSchema.optional(),
+      channel: z.string().trim().max(100).optional(),
+      keyPoints: keyPointsSchema.optional(),
       estimatedMinutes: z.number().int().min(1).max(240).optional(),
       order: z.number().int().min(0).optional(),
     })
@@ -103,6 +117,9 @@ function serializeLesson(lesson: {
   title: string;
   order: number;
   content: string;
+  videoId?: string;
+  channel?: string;
+  keyPoints?: string[];
   estimatedMinutes: number;
 }) {
   return {
@@ -111,6 +128,9 @@ function serializeLesson(lesson: {
     title: lesson.title,
     order: lesson.order,
     content: lesson.content,
+    videoId: lesson.videoId ?? "",
+    channel: lesson.channel ?? "",
+    keyPoints: lesson.keyPoints ?? [],
     estimatedMinutes: lesson.estimatedMinutes,
   };
 }
@@ -160,7 +180,11 @@ export function registerAdminContentRoutes(router: Router) {
         res.status(201).json({ course: serializeCourse(course) });
       } catch (error) {
         if (isDuplicateKeyError(error)) {
-          throw new HttpError(409, "SLUG_IN_USE", "A course with this slug already exists.");
+          throw new HttpError(
+            409,
+            "SLUG_IN_USE",
+            "A course with this slug already exists."
+          );
         }
         throw error;
       }
@@ -185,7 +209,11 @@ export function registerAdminContentRoutes(router: Router) {
         res.json({ course: serializeCourse(course) });
       } catch (error) {
         if (isDuplicateKeyError(error)) {
-          throw new HttpError(409, "SLUG_IN_USE", "A course with this slug already exists.");
+          throw new HttpError(
+            409,
+            "SLUG_IN_USE",
+            "A course with this slug already exists."
+          );
         }
         throw error;
       }
@@ -250,6 +278,9 @@ export function registerAdminContentRoutes(router: Router) {
           courseId: string;
           title: string;
           content: string;
+          videoId?: string;
+          channel?: string;
+          keyPoints?: string[];
           estimatedMinutes: number;
           order?: number;
         };
@@ -263,6 +294,9 @@ export function registerAdminContentRoutes(router: Router) {
           courseId: course._id,
           title: body.title,
           content: body.content,
+          videoId: body.videoId ?? "",
+          channel: body.channel ?? "",
+          keyPoints: body.keyPoints ?? [],
           estimatedMinutes: body.estimatedMinutes,
           order,
         });
@@ -289,6 +323,9 @@ export function registerAdminContentRoutes(router: Router) {
         body: {
           title?: string;
           content?: string;
+          videoId?: string;
+          channel?: string;
+          keyPoints?: string[];
           estimatedMinutes?: number;
           order?: number;
         };

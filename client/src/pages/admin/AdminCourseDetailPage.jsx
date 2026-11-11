@@ -16,6 +16,9 @@ export default function AdminCourseDetailPage() {
   const [lessonForm, setLessonForm] = useState({
     title: "",
     content: "",
+    videoId: "",
+    channel: "",
+    keyPoints: "",
     estimatedMinutes: 10,
   });
   const details = useQuery({
@@ -43,7 +46,14 @@ export default function AdminCourseDetailPage() {
   const addLesson = useMutation({
     mutationFn: (body) => apiPost("/admin/lessons", body),
     onSuccess: () => {
-      setLessonForm({ title: "", content: "", estimatedMinutes: 10 });
+      setLessonForm({
+        title: "",
+        content: "",
+        videoId: "",
+        channel: "",
+        keyPoints: "",
+        estimatedMinutes: 10,
+      });
       setNotice("Lesson added.");
       refreshCourseData();
     },
@@ -100,10 +110,10 @@ export default function AdminCourseDetailPage() {
       <PageNotice
         error={Boolean(
           saveCourse.error ||
-            addLesson.error ||
-            saveLesson.error ||
-            deleteLesson.error ||
-            reorder.error
+          addLesson.error ||
+          saveLesson.error ||
+          deleteLesson.error ||
+          reorder.error
         )}
       >
         {notice}
@@ -132,11 +142,21 @@ export default function AdminCourseDetailPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium">
             Title
-            <input className={inputClass} name="title" defaultValue={course.title} required />
+            <input
+              className={inputClass}
+              name="title"
+              defaultValue={course.title}
+              required
+            />
           </label>
           <label className="text-sm font-medium">
             Slug
-            <input className={inputClass} name="slug" defaultValue={course.slug} required />
+            <input
+              className={inputClass}
+              name="slug"
+              defaultValue={course.slug}
+              required
+            />
           </label>
           <label className="text-sm font-medium">
             Category
@@ -206,6 +226,10 @@ export default function AdminCourseDetailPage() {
           addLesson.mutate({
             courseId: course.id,
             ...lessonForm,
+            keyPoints: lessonForm.keyPoints
+              .split("\n")
+              .map((point) => point.trim())
+              .filter(Boolean),
             estimatedMinutes: Number(lessonForm.estimatedMinutes),
           });
         }}
@@ -217,7 +241,9 @@ export default function AdminCourseDetailPage() {
             className={inputClass}
             required
             value={lessonForm.title}
-            onChange={(event) => setLessonForm({ ...lessonForm, title: event.target.value })}
+            onChange={(event) =>
+              setLessonForm({ ...lessonForm, title: event.target.value })
+            }
           />
         </label>
         <label className="mt-4 block text-sm font-medium">
@@ -228,6 +254,40 @@ export default function AdminCourseDetailPage() {
             value={lessonForm.content}
             onChange={(event) =>
               setLessonForm({ ...lessonForm, content: event.target.value })
+            }
+          />
+        </label>
+        <label className="mt-4 block text-sm font-medium">
+          YouTube video ID
+          <input
+            className={inputClass}
+            maxLength={11}
+            pattern="[A-Za-z0-9_-]{11}"
+            placeholder="Optional; exactly 11 characters"
+            value={lessonForm.videoId}
+            onChange={(event) =>
+              setLessonForm({ ...lessonForm, videoId: event.target.value })
+            }
+          />
+        </label>
+        <label className="mt-4 block text-sm font-medium">
+          Lecture channel
+          <input
+            className={inputClass}
+            maxLength={100}
+            value={lessonForm.channel}
+            onChange={(event) =>
+              setLessonForm({ ...lessonForm, channel: event.target.value })
+            }
+          />
+        </label>
+        <label className="mt-4 block text-sm font-medium">
+          Key points (one per line, up to 6)
+          <textarea
+            className={`${inputClass} min-h-24`}
+            value={lessonForm.keyPoints}
+            onChange={(event) =>
+              setLessonForm({ ...lessonForm, keyPoints: event.target.value })
             }
           />
         </label>
@@ -273,6 +333,12 @@ export default function AdminCourseDetailPage() {
                   body: {
                     title: data.get("title"),
                     content: data.get("content"),
+                    videoId: data.get("videoId"),
+                    channel: data.get("channel"),
+                    keyPoints: String(data.get("keyPoints") ?? "")
+                      .split("\n")
+                      .map((point) => point.trim())
+                      .filter(Boolean),
                     estimatedMinutes: Number(data.get("estimatedMinutes")),
                   },
                 });
@@ -289,6 +355,27 @@ export default function AdminCourseDetailPage() {
                 name="content"
                 defaultValue={lesson.content}
                 required
+              />
+              <input
+                className={inputClass}
+                name="videoId"
+                defaultValue={lesson.videoId ?? ""}
+                maxLength={11}
+                pattern="[A-Za-z0-9_-]{11}"
+                placeholder="YouTube video ID (optional)"
+              />
+              <input
+                className={inputClass}
+                name="channel"
+                defaultValue={lesson.channel ?? ""}
+                maxLength={100}
+                placeholder="Lecture channel (optional)"
+              />
+              <textarea
+                className={`${inputClass} min-h-24`}
+                name="keyPoints"
+                defaultValue={(lesson.keyPoints ?? []).join("\n")}
+                placeholder="Key points, one per line (up to 6)"
               />
               <input
                 className={inputClass}

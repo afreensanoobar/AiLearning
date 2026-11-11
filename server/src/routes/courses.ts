@@ -58,7 +58,10 @@ coursesRouter.get(
     if (!course) {
       throw new HttpError(404, "COURSE_NOT_FOUND", "Course not found.");
     }
-    const lessons = await Lesson.find({ courseId: course._id }).sort({ order: 1 }).lean();
+    const lessons = await Lesson.find({ courseId: course._id })
+      .select("title content videoId channel keyPoints order estimatedMinutes")
+      .sort({ order: 1 })
+      .lean();
     res.json({ course, lessons });
   })
 );

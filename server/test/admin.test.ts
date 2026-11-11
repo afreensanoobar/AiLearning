@@ -20,6 +20,8 @@ test("admins can manage content, questions, users and stats", async (t) => {
     { authRouter },
     { createAdminRouter },
     { createAssessmentsRouter },
+    { coursesRouter },
+    { Lesson },
     { Question },
     { User },
     { connectToDatabase, disconnectFromDatabase },
@@ -28,6 +30,8 @@ test("admins can manage content, questions, users and stats", async (t) => {
     import("../src/routes/auth.js"),
     import("../src/routes/admin.js"),
     import("../src/routes/assessments.js"),
+    import("../src/routes/courses.js"),
+    import("../src/models/lesson.js"),
     import("../src/models/question.js"),
     import("../src/models/user.js"),
     import("../src/config/database.js"),
@@ -53,6 +57,7 @@ test("admins can manage content, questions, users and stats", async (t) => {
   app.use(express.json());
   app.use(cookieParser());
   app.use("/api/auth", authRouter);
+  app.use("/api/courses", coursesRouter);
   app.use("/api/assessments", createAssessmentsRouter(mockGateway));
   app.use("/api/admin", createAdminRouter(mockGateway));
   app.use(notFoundHandler);
@@ -65,6 +70,9 @@ test("admins can manage content, questions, users and stats", async (t) => {
 
   await connectToDatabase();
   await seedContent();
+  const seededLessonCount = await Lesson.countDocuments();
+  await seedContent();
+  assert.equal(await Lesson.countDocuments(), seededLessonCount);
 
   const student = request.agent(app);
   const admin = request.agent(app);
@@ -123,15 +131,45 @@ test("admins can manage content, questions, users and stats", async (t) => {
   assert.deepEqual(createdCourse.body.course.skills, ["Git", "Branching", "GitHub"]);
   const courseId = createdCourse.body.course.id;
 
+  await admin
+    .post("/api/admin/lessons")
+    .send({
+      courseId,
+      title: "Invalid video",
+      content: "This lesson has an invalid video identifier.",
+      videoId: "not-an-id",
+      estimatedMinutes: 8,
+    })
+    .expect(400);
+  const invalidModelLesson = new Lesson({
+    courseId,
+    title: "Invalid model video",
+    content: "This lesson also has an invalid video identifier.",
+    videoId: "not-an-id",
+    estimatedMinutes: 8,
+    order: 20,
+  });
+  await assert.rejects(invalidModelLesson.validate());
+
   const firstLesson = await admin
     .post("/api/admin/lessons")
     .send({
       courseId,
       title: "What is Git?",
       content: "Git is a version control system.",
+      videoId: "Abcdef_1234",
+      channel: "LearnAI",
+      keyPoints: ["Commits preserve history."],
       estimatedMinutes: 8,
     })
     .expect(201);
+  assert.equal(firstLesson.body.lesson.videoId, "Abcdef_1234");
+  assert.equal(firstLesson.body.lesson.channel, "LearnAI");
+  assert.deepEqual(firstLesson.body.lesson.keyPoints, ["Commits preserve history."]);
+  await admin
+    .patch(`/api/admin/lessons/${firstLesson.body.lesson.id}`)
+    .send({ videoId: "invalid" })
+    .expect(400);
   const secondLesson = await admin
     .post("/api/admin/lessons")
     .send({
@@ -148,6 +186,16 @@ test("admins can manage content, questions, users and stats", async (t) => {
       lessonIds: [secondLesson.body.lesson.id, firstLesson.body.lesson.id],
     })
     .expect(200);
+
+  const courseDetails = await admin.get("/api/courses/html-fundamentals").expect(200);
+  const seededHtmlLesson = courseDetails.body.lessons.find(
+    (lesson: { title: string }) => lesson.title === "Introduction to HTML"
+  );
+  assert.ok(seededHtmlLesson);
+  assert.equal(seededHtmlLesson.videoId, "");
+  assert.equal(seededHtmlLesson.channel, "");
+  assert.ok(seededHtmlLesson.content);
+  assert.equal(seededHtmlLesson.keyPoints.length, 4);
   assert.deepEqual(
     reordered.body.lessons.map((lesson: { title: string }) => lesson.title),
     ["Commits", "What is Git?"]

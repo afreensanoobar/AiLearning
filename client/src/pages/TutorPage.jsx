@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { apiPost, apiRequest, apiStream } from "../api/client";
 import { useAuth } from "../context/useAuth";
-import { getLessonDataById } from "../lessonsData";
+import { useCourseDetails } from "../hooks/useCourseDetails";
 import AppShell from "../layout/AppShell";
 import { PageError, PageLoading, PageNotice } from "./PageState";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -35,7 +35,11 @@ export default function TutorPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const lessonId = searchParams.get("lessonId");
-  const lessonData = getLessonDataById(searchParams.get("lessonDataId"));
+  const courseSlug = searchParams.get("courseSlug");
+  const lessonDetails = useCourseDetails(lessonId ? courseSlug : null);
+  const lessonData = lessonDetails.data?.lessons?.find(
+    (lesson) => lesson._id === lessonId
+  );
   const [sessionId, setSessionId] = useState(null);
   const [level, setLevel] = useState(user?.currentLevel ?? "Beginner");
   const [lessonQuestion, setLessonQuestion] = useState("");
@@ -88,19 +92,10 @@ export default function TutorPage() {
     setIsAskingLesson(true);
     setLessonAnswer("");
     setLessonFallback(false);
-    const notes = [
-      lessonData?.notes,
-      lessonData?.keyPoints?.length
-        ? `Key points:\n${lessonData.keyPoints.map((point) => `- ${point}`).join("\n")}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n\n");
     try {
       const result = await apiPost("/tutor", {
         lessonId,
         question,
-        notes,
       });
       setLessonAnswer(result.answer);
       setLessonFallback(Boolean(result.fallback));
@@ -161,17 +156,45 @@ export default function TutorPage() {
   const stop = () => abortRef.current?.abort();
 
   if (lessonId) {
+    if (!courseSlug) {
+      return (
+        <AppShell activePage="AI Tutor">
+          <PageNotice error>
+            This lesson link is missing its course. Return to courses and open the lesson
+            again.
+          </PageNotice>
+        </AppShell>
+      );
+    }
+    if (lessonDetails.isPending) {
+      return (
+        <AppShell activePage="AI Tutor">
+          <PageLoading label="Loading lesson..." />
+        </AppShell>
+      );
+    }
+    if (lessonDetails.isError) {
+      return (
+        <AppShell activePage="AI Tutor">
+          <PageError
+            error={lessonDetails.error}
+            onRetry={() => void lessonDetails.refetch()}
+          />
+        </AppShell>
+      );
+    }
+    if (!lessonData) {
+      return (
+        <AppShell activePage="AI Tutor">
+          <PageNotice error>The requested lesson could not be found.</PageNotice>
+        </AppShell>
+      );
+    }
     return (
       <AppShell activePage="AI Tutor">
         <button
           type="button"
-          onClick={() =>
-            navigate(
-              lessonData
-                ? `/courses/${lessonData.courseSlug}#lesson-${lessonData.id}`
-                : "/courses"
-            )
-          }
+          onClick={() => navigate(`/courses/${courseSlug}#lesson-${lessonId}`)}
           className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
         >
           <ArrowLeft aria-hidden="true" size={17} /> Back to lesson
@@ -183,7 +206,7 @@ export default function TutorPage() {
             </span>
             <div>
               <p className="text-sm font-semibold text-violet-700">
-                {lessonData?.courseTitle ?? "LearnAI lesson"}
+                {lessonDetails.data.course.title}
               </p>
               <h1 className="mt-1 text-2xl font-bold text-slate-800">
                 Ask about {lessonData?.title ?? "this lesson"}

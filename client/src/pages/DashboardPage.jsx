@@ -6,6 +6,7 @@ import { useCourseProgress } from "../hooks/useCourseProgress";
 import { useHistory } from "../hooks/useHistory";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { useSummary } from "../hooks/useSummary";
+import { useRecommendedLessons } from "../hooks/useCourseDetails";
 import { getRecommendedLesson } from "../lessonsData";
 import BadgeCollection from "../components/BadgeCollection";
 import LeaderboardCard from "../components/LeaderboardCard";
@@ -20,6 +21,8 @@ export default function DashboardPage() {
   const courseProgress = useCourseProgress();
   const recommendations = useRecommendations();
   const history = useHistory();
+  const recommendationItems = recommendations.data?.recommendations ?? [];
+  const recommendedLessons = useRecommendedLessons(recommendationItems);
   const queries = [summary, courses, courseProgress, recommendations, history];
 
   if (queries.some((query) => query.isPending)) {
@@ -161,8 +164,9 @@ export default function DashboardPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {recommendations.data.recommendations.map((item, index) => {
-                const lesson = getRecommendedLesson(item.topic);
+              {recommendationItems.map((item, index) => {
+                const target = getRecommendedLesson(item.topic);
+                const lesson = recommendedLessons[index];
                 return (
                   <div
                     key={`${item.topic}-${index}`}
@@ -176,9 +180,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(
-                            `/courses/${lesson.courseSlug}#lesson-${lesson.id}`
-                          )
+                          navigate(`/courses/${target.courseSlug}#lesson-${lesson._id}`)
                         }
                         className="mt-3 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
                       >
