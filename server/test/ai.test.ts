@@ -112,7 +112,10 @@ test("Gemini provider maps timeout and streams text chunks", async () => {
   const streaming = createGeminiProvider({
     apiKey: "test-key",
     fetcher: async (url) => {
-      assert.match(String(url), /streamGenerateContent\?alt=sse/);
+      assert.match(
+        String(url),
+        /models\/gemini-flash-latest:streamGenerateContent\?alt=sse/
+      );
       return new Response(streamBody, { status: 200 });
     },
   });

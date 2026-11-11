@@ -45,7 +45,7 @@ function requestBody(request: AiRequest) {
 
 export function createGeminiProvider(options: GeminiOptions = {}): AiProvider {
   const apiKey = options.apiKey ?? env.AI_API_KEY;
-  const model = options.model ?? env.AI_MODEL;
+  const model = options.model ?? "gemini-flash-latest";
   const timeoutMs = options.timeoutMs ?? env.AI_TIMEOUT_MS;
   const fetcher = options.fetcher ?? fetch;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`;

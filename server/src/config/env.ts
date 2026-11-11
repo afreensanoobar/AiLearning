@@ -29,7 +29,6 @@ const envSchema = z.object({
     .default("7d"),
   AI_PROVIDER: z.enum(["gemini"]).default("gemini"),
   AI_API_KEY: z.string().optional(),
-  AI_MODEL: z.string().default("gemini-1.5-flash"),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(20000),
 });
 
