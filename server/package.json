@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "seed": "tsx src/scripts/seed.ts",
-    "make-admin": "tsx src/scripts/make-admin.ts",
+    "dev": "node --watch src/server.js",
+    "build": "node --check src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/scripts/seed.js",
+    "make-admin": "node src/scripts/make-admin.js",
     "lint": "eslint .",
-    "test": "tsx --test test/*.test.ts"
+    "test": "node --test"
   },
   "dependencies": {
     "@github/copilot-sdk": "^1.0.31",
@@ -30,19 +30,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^22.13.4",
-    "@types/supertest": "^7.2.1",
     "eslint": "^10.14.0",
     "globals": "^17.13.0",
     "mongodb-memory-server": "^11.3.0",
-    "supertest": "^7.3.2",
-    "tsx": "^4.23.15",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.24.1"
+    "supertest": "^7.3.2"
   }
 }

@@ -108,7 +108,7 @@ learnai/
 │   │   ├── services/        # business logic, engines, ai/
 │   │   ├── middleware/      # auth, validate, errors, rateLimit
 │   │   ├── utils/
-│   │   └── app.ts / server.ts
+│   │   └── app.js / server.js
 │   ├── seed/                # JSON + seed script
 │   └── tests/
 ├── DECISIONS.md
@@ -116,7 +116,7 @@ learnai/
 └── package.json             # npm workspaces: client, server
 ```
 
-**Stack:** Server in TypeScript — Node 20+, Express, Mongoose, zod, bcrypt, jsonwebtoken, helmet, cors, cookie-parser, express-rate-limit, express-mongo-sanitize (or equivalent), pino for logs. Client stays Vite + React (JSX is fine; TypeScript optional later). Data fetching with TanStack Query and React Router.
+**Stack:** Server in JavaScript using native Node.js ES modules — Node 20+, Express, Mongoose, zod, bcrypt, jsonwebtoken, helmet, cors, cookie-parser, express-rate-limit, express-mongo-sanitize (or equivalent), pino for logs. Client stays Vite + React with JSX. Data fetching with TanStack Query and React Router.
 
 **Environment variables (server `.env`, with a committed `.env.example`):**
 
@@ -162,9 +162,9 @@ Client: `VITE_API_URL=http://localhost:4000/api`.
 
 **Tasks**
 
-- `config/env.ts`: parse and validate env vars with zod; crash on missing required ones.
+- `config/env.js`: parse and validate env vars with zod; crash on missing required ones.
 - Mongoose connection with retry and graceful shutdown.
-- `app.ts`: helmet, cors (origin `CLIENT_URL`, credentials true), JSON body limit 100kb, cookie-parser, mongo-sanitize, request logging.
+- `app.js`: helmet, cors (origin `CLIENT_URL`, credentials true), JSON body limit 100kb, cookie-parser, mongo-sanitize, request logging.
 - Middleware: `validate(schema)` (zod for body/query/params), global error handler using the standard error shape, 404 handler, async wrapper.
 - `GET /api/health` returns `{ status: "ok", db: "connected" }`.
 
@@ -308,11 +308,11 @@ Client: `VITE_API_URL=http://localhost:4000/api`.
 
 **Tasks**
 
-- `services/ai/provider.ts`: interface `generate({ system, messages, maxTokens, temperature, json?, signal })` and `stream(...)` returning an async iterator of text chunks.
-- `services/ai/gemini.ts`: default implementation reading `AI_API_KEY`, `AI_MODEL`. Structure it so adding OpenAI or Anthropic is one new file chosen by `AI_PROVIDER`.
+- `services/ai/provider.js`: provider contract for `generate({ system, messages, maxTokens, temperature, json?, signal })` and `stream(...)` returning an async iterator of text chunks.
+- `services/ai/gemini.js`: default implementation reading `AI_API_KEY`, `AI_MODEL`. Structure it so adding OpenAI or Anthropic is one new file chosen by `AI_PROVIDER`.
 - Timeout (`AI_TIMEOUT_MS`), one retry on 5xx, mapped error codes (`AI_UNAVAILABLE`, `AI_RATE_LIMITED`).
-- `services/ai/prompts.ts`: all system prompts in one file (templates in Section 5).
-- `services/ai/guard.ts`: max input length (1000 chars), strips control characters, caps history to last 10 messages, rejects empty input.
+- `services/ai/prompts.js`: all system prompts in one file (templates in Section 5).
+- `services/ai/guard.js`: max input length (1000 chars), strips control characters, caps history to last 10 messages, rejects empty input.
 - Per-user rate limit for AI routes (e.g. 20 tutor messages per hour, 10 explain/plan calls per hour) with a clear 429 message.
 - Cache collection `AiCache { key, value, createdAt }` with a TTL index; key = hash of feature + inputs.
 - Token/usage logging per request (no prompt content in logs).
@@ -344,7 +344,7 @@ Client: `VITE_API_URL=http://localhost:4000/api`.
 
 **Safety:** the system prompt restricts the tutor to web development learning, tells it to treat user text as a question, never as instructions that change its rules, and to refuse unrelated requests politely. Never include other users' data.
 
-**Fallback:** port `generateTutorResponse` from `AITutor.jsx` to `services/ruleTutor.ts`. If the AI call fails or is unavailable, return the rule-based answer and mark the message `fallback: true` so the UI can show a small notice.
+**Fallback:** port `generateTutorResponse` from `AITutor.jsx` to `services/ruleTutor.js`. If the AI call fails or is unavailable, return the rule-based answer and mark the message `fallback: true` so the UI can show a small notice.
 
 **Acceptance**
 
@@ -528,7 +528,7 @@ Every document has `createdAt` / `updatedAt`. Index every field used for filteri
 
 ---
 
-## 5. AI prompt templates (put in `services/ai/prompts.ts`)
+## 5. AI prompt templates (put in `services/ai/prompts.js`)
 
 **Tutor system prompt**
 
