@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   BrainCircuit,
   CheckCircle,
@@ -179,40 +179,13 @@ const questions = [
   },
 ];
 
-function getSavedProgress() {
-  try {
-    const saved = localStorage.getItem("adaptiveLearningProgress");
-    return saved ? JSON.parse(saved) : {};
-  } catch (error) {
-    console.error("Unable to load saved progress:", error);
-    return {};
-  }
-}
-
 function Assessment({ onComplete }) {
-  const savedProgress = getSavedProgress();
-  const [current, setCurrent] = useState(savedProgress.current ?? 0);
-  const [answers, setAnswers] = useState(savedProgress.answers ?? {});
-  const [submitted, setSubmitted] = useState(savedProgress.submitted ?? false);
-
-  const [difficulty, setDifficulty] = useState(savedProgress.difficulty ?? "Beginner");
-
-  const [challengeStage, setChallengeStage] = useState(savedProgress.challengeStage ?? 1);
-
-  const [isChallenge, setIsChallenge] = useState(savedProgress.isChallenge ?? false);
-
-  useEffect(() => {
-    const progress = {
-      current,
-      answers,
-      submitted,
-      difficulty,
-      challengeStage,
-      isChallenge,
-    };
-
-    localStorage.setItem("adaptiveLearningProgress", JSON.stringify(progress));
-  }, [current, answers, submitted, difficulty, challengeStage, isChallenge]);
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [difficulty, setDifficulty] = useState("Beginner");
+  const [challengeStage, setChallengeStage] = useState(1);
+  const [isChallenge, setIsChallenge] = useState(false);
 
   const quizQuestions = isChallenge
     ? advancedChallenges[challengeStage]
@@ -271,25 +244,8 @@ function Assessment({ onComplete }) {
       completedAt: new Date().toISOString(),
     };
 
-    try {
-      const previousHistory = JSON.parse(
-        localStorage.getItem("assessmentHistory") || "[]"
-      );
-
-      const updatedHistory = [...previousHistory, newRecord];
-
-      localStorage.setItem("assessmentHistory", JSON.stringify(updatedHistory));
-
-      setSubmitted(true);
-
-      // Notify parent so dashboard stats refresh immediately
-      if (typeof onComplete === "function") {
-        onComplete(updatedHistory);
-      }
-    } catch (error) {
-      console.error("Unable to save assessment history:", error);
-      alert("Unable to save your assessment history.");
-    }
+    setSubmitted(true);
+    if (typeof onComplete === "function") onComplete(newRecord);
   };
 
   const restartQuiz = () => {

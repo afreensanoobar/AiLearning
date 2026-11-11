@@ -37,6 +37,8 @@ The tutor API is available at `POST /api/tutor/sessions`, `GET /api/tutor/sessio
 
 For submitted attempts, `POST /api/assessments/:id/explain` with `{ "questionId": "..." }` explains only that student's incorrect answers. `POST /api/progress/ai-plan` generates a personalized seven-day plan from the current level and five most recent submitted attempts; it is cached until the next attempt is submitted. Admins can generate review drafts with `POST /api/admin/questions/generate` and `{ "topic": "HTML", "difficulty": "Beginner", "count": 5 }`. Generated questions are saved as drafts and are excluded from assessments until approved.
 
+The client uses React Router, cookie-based API authentication, React Query, and an extracted application shell. Its existing page data remains in memory only until those pages are connected to the API in M11; browser refresh no longer restores demo data from `localStorage`.
+
 ---
 
 ## Topics Covered

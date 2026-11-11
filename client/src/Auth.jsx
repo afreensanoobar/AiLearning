@@ -1,51 +1,38 @@
 import { useState } from "react";
 import { BrainCircuit, Eye, EyeOff } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "./context/useAuth";
 
-function Auth({ onLogin }) {
-  const [isRegister, setIsRegister] = useState(false);
+function Auth({ initialMode = "login" }) {
+  const [isRegister, setIsRegister] = useState(initialMode === "register");
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
+    if (isRegister && password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-    const users = JSON.parse(localStorage.getItem("demoUsers") || "[]");
-
-    if (isRegister) {
-      if (password.length < 6) {
-        setError("Password must contain at least 6 characters.");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-      }
-
-      if (users.some((user) => user.email === email)) {
-        setError("An account with this email already exists.");
-        return;
-      }
-
-      const newUser = { name, email, password };
-      localStorage.setItem("demoUsers", JSON.stringify([...users, newUser]));
-      onLogin(newUser);
-    } else {
-      const user = users.find(
-        (item) => item.email === email && item.password === password
-      );
-
-      if (!user) {
-        setError("Invalid email or password.");
-        return;
-      }
-
-      onLogin(user);
+    setSubmitting(true);
+    try {
+      if (isRegister) await register({ name, email, password });
+      else await login({ email, password });
+      navigate(location.state?.from?.pathname || "/dashboard", { replace: true });
+    } catch (requestError) {
+      setError(requestError.message || "Unable to authenticate. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -95,6 +82,7 @@ function Auth({ onLogin }) {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={isRegister ? 8 : undefined}
               required
               className="w-full rounded-xl border p-3 pr-12 outline-none focus:border-violet-500"
             />
@@ -122,9 +110,10 @@ function Auth({ onLogin }) {
 
           <button
             type="submit"
+            disabled={submitting}
             className="w-full rounded-xl bg-violet-600 py-3 font-semibold text-white hover:bg-violet-700"
           >
-            {isRegister ? "Register" : "Login"}
+            {submitting ? "Please wait..." : isRegister ? "Register" : "Login"}
           </button>
         </form>
 
@@ -132,8 +121,13 @@ function Auth({ onLogin }) {
           {isRegister ? "Already have an account?" : "Don't have an account?"}
           <button
             onClick={() => {
-              setIsRegister(!isRegister);
+              const nextIsRegister = !isRegister;
+              setIsRegister(nextIsRegister);
               setError("");
+              navigate(nextIsRegister ? "/register" : "/login", {
+                replace: true,
+                state: location.state,
+              });
             }}
             className="ml-2 font-semibold text-violet-600"
           >
