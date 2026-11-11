@@ -10,6 +10,7 @@ import {
   Menu,
   Search,
   Settings,
+  Shield,
   Sparkles,
   X,
 } from "lucide-react";
@@ -51,6 +52,12 @@ export default function AppShell({ activePage, children }) {
   const matches = courses.filter((course) =>
     course.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
   );
+  const menuItems = [
+    ...navigation,
+    ...(user?.role === "admin"
+      ? [{ name: "Admin", path: "/admin", icon: Shield }]
+      : []),
+  ];
 
   const navigateTo = (path) => {
     navigate(path);
@@ -65,7 +72,7 @@ export default function AppShell({ activePage, children }) {
             <button onClick={() => setMenuOpen(false)} className="mb-8">
               <X />
             </button>
-            {navigation.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <button
@@ -98,7 +105,7 @@ export default function AppShell({ activePage, children }) {
             Main Menu
           </p>
           <nav className="space-y-2">
-            {navigation.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon;
               const selected = activePage === item.name;
               return (

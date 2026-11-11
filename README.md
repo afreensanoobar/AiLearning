@@ -1,123 +1,84 @@
 # LearnAI – Personalized Adaptive Learning Platform
 
-A college project built with **React + Vite + Tailwind CSS** that provides an adaptive, personalized learning experience for web development students.
+A college project that gives web development students an adaptive learning path: courses, quizzes, progress analytics, and an AI tutor. The app is a **React client** plus a **Node/Express API** with **MongoDB**.
 
 ---
 
 ## Features
 
-- **Adaptive Assessments** – Quiz difficulty auto-adjusts (Beginner → Intermediate → Advanced) based on performance
-- **Advanced Challenges** – 3 unlockable challenge stages after mastering the Advanced level
-- **AI Tutor** – Interactive chatbot explaining HTML, CSS, JavaScript, and React concepts at your level
-- **My Courses** – Track lesson-by-lesson progress across 4 courses with live checkboxes
-- **My Progress** – Topic-wise performance charts, personalized learning path, and full assessment history
-- **AI Recommendations** – Personalized study suggestions based on weak topics
-- **Learning Streak** – Consecutive-day activity tracker
-- **Auth** – Client-side register/login system (demo purposes)
+- **Auth** – Register, login, and logout with one signed JWT in an httpOnly cookie
+- **Adaptive assessments** – Difficulty moves Beginner → Intermediate → Advanced from quiz scores; perfect Advanced scores unlock challenge stages
+- **AI tutor** – Streamed chat, saved sessions, and a rule-based fallback if Gemini is unavailable
+- **Courses and lessons** – Four starter courses; lesson completion is stored per user
+- **Progress** – Topic performance, learning path, recommendations, streak, and a seven-day AI study plan
+- **Gamification** – Notifications, badges, and a display-name leaderboard
+- **Admin** – Manage courses, lessons, questions (including AI drafts), users, and basic stats
 
-The backend auth API is now available at `/api/auth` and `/api/users/me` (register, login, logout, current user, profile and password endpoints). It uses one signed JWT in an httpOnly cookie; there is no refresh-token flow. Logging out or changing a password clears the browser cookie, but a copied JWT remains valid until it expires. The current React screen still uses demo localStorage authentication; it is connected to the API in a later frontend module.
+---
 
-Seed the initial course, lesson, and assessment-question content after configuring MongoDB:
+## Tech stack
+
+| Layer | Tools |
+| --- | --- |
+| Client | React 19, Vite, Tailwind CSS, React Router, React Query |
+| Server | Express, TypeScript, MongoDB/Mongoose, Zod, JWT cookies |
+| AI | Gemini (optional); rule-based tutor if the key is missing |
+
+---
+
+## Getting started
+
+```bash
+git clone https://github.com/Nuba743/CollegeProject.git
+cd CollegeProject
+npm install
+cp .env.example .env
+```
+
+Set `MONGODB_URI` to a running MongoDB instance and replace `JWT_SECRET` with a private random value of at least 32 characters.
 
 ```bash
 npm run seed -w server
-```
-
-Authenticated read endpoints are available at `GET /api/courses`, `GET /api/courses/:slug`, and `GET /api/lessons/:id`. Quiz questions (including their answers) are stored for later assessment APIs and are not exposed by these content endpoints.
-
-Lesson progress is stored per user and course. Use `GET /api/progress/courses` to read course percentages, `POST /api/lessons/:id/complete` to mark a lesson complete, and `DELETE /api/lessons/:id/complete` to undo it. These endpoints require the auth cookie.
-
-Assessments are created with `POST /api/assessments/start` and `{ "mode": "assessment" }` or `{ "mode": "challenge" }`. Save each selection with `PATCH /api/assessments/:id/answer`, then submit with `POST /api/assessments/:id/submit`. Correct answers and explanations are returned only after submission. Use `GET /api/assessments/history` and `GET /api/assessments/:id` to review attempts.
-
-Progress analytics are available at `GET /api/progress/summary`, `/topics`, `/recommendations`, `/path`, and `/trend`. The summary uses the user's saved timezone to count today's assessments and activity streaks. Since older lesson progress did not store completion dates, streak history for lessons starts when timestamped activity tracking is introduced.
-
-The AI service layer is configured with `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, and `AI_TIMEOUT_MS`. The key is optional while developing; AI requests return a clear unavailable error until it is configured. AI features use a shared Gemini provider, input guard, per-user rate limiter, and one-day response cache.
-
-The tutor API is available at `POST /api/tutor/sessions`, `GET /api/tutor/sessions`, `GET /api/tutor/sessions/:id`, and `DELETE /api/tutor/sessions/:id`. Send a message with `POST /api/tutor/sessions/:id/messages` and `{ "content": "Explain closures", "level": "Beginner" }`; the optional level overrides the signed-in user's current level for that reply. Messages stream as server-sent events, are saved to the user's session, and use a rule-based response if AI is unavailable. Tutor context is built on the server from the student's weakest topics and recent missed-question topics.
-
-For submitted attempts, `POST /api/assessments/:id/explain` with `{ "questionId": "..." }` explains only that student's incorrect answers. `POST /api/progress/ai-plan` generates a personalized seven-day plan from the current level and five most recent submitted attempts; it is cached until the next attempt is submitted. Admins can generate review drafts with `POST /api/admin/questions/generate` and `{ "topic": "HTML", "difficulty": "Beginner", "count": 5 }`. Generated questions are saved as drafts and are excluded from assessments until approved.
-
-The client uses React Router, cookie-based API authentication, React Query, and an extracted application shell. Its existing page data remains in memory only until those pages are connected to the API in M11; browser refresh no longer restores demo data from `localStorage`.
-
----
-
-## Topics Covered
-
-| Course            | Lessons   |
-| ----------------- | --------- |
-| HTML Fundamentals | 5 lessons |
-| CSS Fundamentals  | 5 lessons |
-| JavaScript        | 5 lessons |
-| React Development | 5 lessons |
-
----
-
-## Tech Stack
-
-| Technology           | Purpose                 |
-| -------------------- | ----------------------- |
-| React 19             | UI framework            |
-| Vite 8               | Build tool & dev server |
-| Tailwind CSS 4       | Styling                 |
-| Lucide React         | Icons                   |
-| Browser localStorage | All state persistence   |
-
----
-
-## Getting Started
-
-```bash
-# Clone the repo
-git clone https://github.com/Nuba743/CollegeProject.git
-cd CollegeProject
-
-# Install dependencies
-npm install
-
-# Copy the example environment file and start MongoDB
-cp .env.example .env
-
-# Start the dev server
 npm run dev
 ```
 
-Set `MONGODB_URI` in `.env` to a running MongoDB instance, and replace `JWT_SECRET` with a private random value of at least 32 characters before starting the API. Auth cookies expire after the configured `JWT_TTL` (7 days by default); users sign in again when it expires. Then open **http://localhost:5173** in your browser. The API health check is available at **http://localhost:4000/api/health**.
+Open **http://localhost:5173**. The API health check is **http://localhost:4000/api/health**.
 
-**Other commands:**
+To promote an existing account to admin:
 
 ```bash
-npm run build                 # Build client and server
-npm run preview -w client     # Preview the production client
-npm run lint                  # Lint both workspaces
-npm run test                  # Run workspace tests
+npm run make-admin -w server -- you@example.com
+```
+
+**Other commands**
+
+```bash
+npm run build
+npm run lint
+npm run test
+npm run preview -w client
 ```
 
 ---
 
-## Project Structure
+## Environment variables
 
-```
-client/
-└── src/
-    ├── App.jsx                 # Root component — shell, navigation, all pages
-    ├── Auth.jsx                # Login / Register form
-    ├── Assessment.jsx          # Adaptive quiz engine
-    ├── AITutor.jsx             # Interactive chatbot tutor
-    ├── adaptiveEngine.js       # Difficulty level calculator
-    ├── learningPathEngine.js   # Personalized study path generator
-    ├── recommendationEngine.js # Topic recommendation engine
-    └── advancedChallenges.js   # Advanced challenge question bank
-server/
-└── src/
-    ├── app.ts                  # Express application and middleware
-    ├── config/                 # Environment and MongoDB connection
-    ├── middleware/             # Validation and error handling
-    └── server.ts               # Startup and graceful shutdown
-```
+| Name | Purpose |
+| --- | --- |
+| `PORT` | API port (default `4000`) |
+| `MONGODB_URI` | MongoDB connection string |
+| `CLIENT_URL` | Client origin for CORS (default `http://localhost:5173`) |
+| `JWT_SECRET` | Cookie signing secret (min 32 characters) |
+| `JWT_TTL` | Auth cookie lifetime (default `7d`) |
+| `AI_PROVIDER` | Currently `gemini` |
+| `AI_API_KEY` | Optional while developing; AI routes error clearly without it |
+| `AI_MODEL` | Default `gemini-1.5-flash` |
+| `AI_TIMEOUT_MS` | Provider timeout |
+| `VITE_API_URL` | Client API base URL (default `http://localhost:4000/api`) |
 
 ---
 
-## How the Adaptive Engine Works
+## How the adaptive engine works
 
 ```
 Score ≥ 80%  →  Promote to next level
@@ -126,14 +87,45 @@ Score < 50%  →  Drop to previous level
 Score = 100% at Advanced  →  Mastery achieved → Unlock challenge stages
 ```
 
+Correct answers are returned only after a quiz is submitted.
+
+---
+
+## API overview
+
+All routes are prefixed with `/api`. Authenticated routes need the `learnai_auth` cookie.
+
+| Area | Endpoints |
+| --- | --- |
+| Auth | `POST /auth/register`, `/auth/login`, `/auth/logout`; `GET /auth/me` |
+| Users | `GET\|PATCH /users/me`, `POST /users/me/password`, `DELETE /users/me/progress` |
+| Content | `GET /courses`, `/courses/:slug` |
+| Lessons | `POST\|DELETE /lessons/:id/complete` |
+| Assessments | `POST /assessments/start`, `PATCH /assessments/:id/answer`, `POST /assessments/:id/submit`, `POST /assessments/:id/explain`, `GET /assessments/history`, `GET /assessments/:id` |
+| Progress | `GET /progress/summary`, `/courses`, `/topics`, `/recommendations`, `/path`, `/trend`; `POST /progress/ai-plan` |
+| Tutor | `POST\|GET /tutor/sessions`, `GET\|DELETE /tutor/sessions/:id`, `POST /tutor/sessions/:id/messages` (SSE) |
+| Notifications | `GET /notifications`, `PATCH /notifications/:id/read`, `POST /notifications/read-all` |
+| Leaderboard | `GET /leaderboard` |
+| Admin | `/admin/stats`, `/admin/courses`, `/admin/lessons`, `/admin/questions` (including `/generate`, approve/reject), `/admin/users` |
+
+---
+
+## Project structure
+
+```
+client/src/          React app (pages, hooks, API client)
+server/src/          Express API, models, AI gateway, engines
+server/test/         Node test runner + MongoDB memory server
+```
+
 ---
 
 ## Notes
 
-- All data is stored in `localStorage` — no backend required
-- The AI Tutor uses a rule-based keyword engine (not a live AI API)
-- Passwords are stored in plain text — this is a demo project only
-
----
+- Passwords are hashed with bcrypt. Auth uses one httpOnly JWT cookie (`SameSite=Lax`, path `/api`). There is no refresh-token flow; users sign in again after `JWT_TTL`.
+- Logout and password changes clear the browser cookie. A copied JWT stays valid until it expires.
+- Deactivated users cannot sign in, and their existing cookie is rejected on the next request.
+- AI-generated questions are saved as drafts and stay out of student quizzes until an admin approves them.
+- Seeded courses cover HTML, CSS, JavaScript, and React (five lessons each).
 
 > Built as a college final project | 2026

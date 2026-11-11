@@ -1,12 +1,27 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import Auth from "./Auth";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminRoute, ProtectedRoute } from "./context/ProtectedRoute";
 import { useAuth } from "./context/useAuth";
+import AdminCourseDetailPage from "./pages/admin/AdminCourseDetailPage";
+import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
+import AdminStatsPage from "./pages/admin/AdminStatsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AssessmentPage from "./pages/AssessmentPage";
 import CoursesPage from "./pages/CoursesPage";
 import DashboardPage from "./pages/DashboardPage";
+import HomeRoute from "./pages/HomeRoute";
+import LegalPage from "./pages/LegalPage";
 import ProgressPage from "./pages/ProgressPage";
 import SettingsPage from "./pages/SettingsPage";
 import TutorPage from "./pages/TutorPage";
@@ -48,21 +63,13 @@ function PublicAuthRoute({ mode }) {
 
 function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 p-6 text-center">
-      <h1 className="text-3xl font-bold text-slate-800">Page not found</h1>
-      <p className="text-slate-500">The page you requested does not exist.</p>
-      <a className="font-semibold text-violet-700" href="/dashboard">
+    <main className="landing-page flex min-h-screen flex-col items-center justify-center gap-6 p-6 text-center">
+      <p className="caption-3 uppercase tracking-[0.12em] text-white/50">LearnAI</p>
+      <h1 className="heading-2">Page not found</h1>
+      <p className="body-6 text-white/55">The page you requested does not exist.</p>
+      <Link to="/" className="primary-button button-md">
         Return to LearnAI
-      </a>
-    </main>
-  );
-}
-
-function AdminPlaceholder() {
-  return (
-    <main className="min-h-screen bg-slate-50 p-8 text-slate-800">
-      <h1 className="text-2xl font-bold">Admin workspace</h1>
-      <p className="mt-2 text-slate-500">Admin tools will be added in M13.</p>
+      </Link>
     </main>
   );
 }
@@ -70,7 +77,9 @@ function AdminPlaceholder() {
 function ApplicationRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="/privacy" element={<LegalPage />} />
+      <Route path="/terms" element={<LegalPage />} />
       <Route path="/login" element={<PublicAuthRoute mode="login" />} />
       <Route path="/register" element={<PublicAuthRoute mode="register" />} />
       {protectedPages.map(([path, Page]) => (
@@ -85,13 +94,19 @@ function ApplicationRoutes() {
         />
       ))}
       <Route
-        path="/admin/*"
+        path="/admin"
         element={
           <AdminRoute>
-            <AdminPlaceholder />
+            <AdminLayout />
           </AdminRoute>
         }
-      />
+      >
+        <Route index element={<AdminStatsPage />} />
+        <Route path="courses" element={<AdminCoursesPage />} />
+        <Route path="courses/:id" element={<AdminCourseDetailPage />} />
+        <Route path="questions" element={<AdminQuestionsPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
+      </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -39,12 +39,31 @@ const generatedQuestionSchema = z
     }
   });
 
-const questionBody = generatedQuestionSchema.extend({
+const questionFields = z.object({
+  text: z.string().trim().min(1),
+  options: z.array(z.string().trim().min(1)).length(4),
+  correctIndex: z.number().int().min(0).max(3),
+  explanation: z.string().trim().min(1),
   topic: z.enum(topics),
   difficulty: z.enum(difficulties),
   challengeStage: z.union([z.literal(1), z.literal(2), z.literal(3), z.null()]).optional(),
   status: z.enum(["active", "draft"]).optional(),
 });
+
+const questionBody = questionFields.superRefine((question, context) => {
+  if (new Set(question.options.map((option) => option.toLowerCase())).size !== 4) {
+    context.addIssue({
+      code: "custom",
+      message: "Options must be distinct.",
+      path: ["options"],
+    });
+  }
+});
+
+const questionPatchBody = questionFields.partial().refine(
+  (body) => Object.keys(body).length > 0,
+  { message: "At least one question field must be provided." }
+);
 
 const listSchema = z.object({
   query: z.object({
@@ -162,9 +181,7 @@ export function registerAdminQuestionRoutes(
     validate(
       z.object({
         params: z.object({ id: objectId }),
-        body: questionBody.partial().refine((body) => Object.keys(body).length > 0, {
-          message: "At least one question field must be provided.",
-        }),
+        body: questionPatchBody,
       })
     ),
     asyncHandler(async (_req, res) => {
